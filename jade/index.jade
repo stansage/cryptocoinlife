@@ -1,0 +1,20 @@
+extends layout
+
+block header
+    title Crypto Coin Life
+    
+block content
+    script
+        include js/webgldetector.js
+    script
+        include js/modernizr.js
+    script.
+        Modernizr.load( {
+            test: Modernizr.webgl && WebglDetector.webgl,
+            nope: 'support.js',
+            yep: [
+                '//cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js',
+                '//cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js',
+                'engine.js'
+            ]
+        } );

@@ -1,7 +1,7 @@
 {
-  "name": "Node.js Getting Started",
-  "description": "A barebones Node.js app using Express 4",
-  "repository": "https://github.com/heroku/node-js-getting-started",
-  "logo": "http://node-js-sample.herokuapp.com/node.svg",
+  "name": "www.cryptocoin.life",
+  "description": "A graphical visualization of cryptocoin transactions",
+  "repository": "https://github.com/stansage/cryptocoin.life",
+  "logo": "http://www.cryptocoin.life/node.svg",
   "keywords": ["node", "express", "static"]
 }
