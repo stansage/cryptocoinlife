@@ -1,24 +1,25 @@
 {
-  "name": "cryptocoinlife",
-  "version": "0.0.1",
-  "description": "A graphical visualization of cryptocurrency transactions",
-  "main": "main.js",
-  "dependencies": {
-    "express": "~4.9.x",
-	"ws": "~0.7.x",
-    "jade": "~1.9.x"
-  },
-  "engines": {
-    "node": "0.10.x"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/stansage/cryptocoinlife"
-  },
-  "keywords": [
-    "node",
-    "heroku",
-    "express"
-  ],
-  "license": "GPLv2"
+    "name": "cryptocoinlife",
+    "version": "0.0.1",
+    "description": "A graphical visualization of cryptocurrency transactions",
+    "main": "main.js",
+    "dependencies": {
+        "express": "~4.9.x",
+        "ws": "~0.7.x",
+        "jade": "~1.9.x",
+        "cors": "~2.5.x"
+    },
+    "engines": {
+        "node": "0.10.x"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/stansage/cryptocoinlife"
+    },
+    "keywords": [
+        "node",
+        "heroku",
+        "express"
+    ],
+    "license": "GPLv2"
 }

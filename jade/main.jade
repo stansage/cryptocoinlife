@@ -1,0 +1,21 @@
+extends html
+
+block header
+    title Crypto Coin Life
+    script(src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js")
+    script(src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js")
+
+block content
+    script
+        include js/webgldetector.js
+    script
+        include js/main.js
+        
+
+// Modernizr.load( {
+//     test: Modernizr.websockets && Modernizr.webgl && WebglDetector.webgl, 
+//     nope: 'support.js',
+//     yep: [ '//cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js',
+//           '//cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js',
+//           'engine.js' ]
+// } );

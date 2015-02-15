@@ -1,42 +1,22 @@
-var express = require( 'express' );
-//var WebSocket = require('ws');
-//var WebSocketServer = require('ws').Server
-
-
-var app = express();
-//var ws = new WebSocket('wss://ws.blockchain.info/inv');
-//var wss = new WebSocketServer({ port: 8080 });
-
-//wss.on('connection', function connection(socket) {
-//	socket.on('message', function incoming(message) {
-//		console.log('received: %s', message);
-//    });
-//    socket.send('something');
-//});
-//ws.on('open', function open() {
-//	ws.send('{"op": "ping_block"}');
-//});
-//ws.error('error', function(event) {
-//	console.error(event);
-//});
-//ws.on('message', function(data, flags) {
-//	console.log(data + ": " + flags);
-//	  // flags.binary will be set if a binary data is received.
-//	  //   // flags.masked will be set if the data was masked.
-//});
+var express = require( 'express' ),
+    app = express();
 
 app.set( 'views', __dirname + '/jade' );
 app.set( 'view engine', 'jade' );
 app.set( 'port', ( process.env.PORT || 5000 ) );
 
-app.use( express.static( __dirname + '/public' ) );
 app.enable( 'strict routing' );
+app.use( express.static( __dirname + '/public' ) );
 
+app.get( '/*', function( request, response, next ) {
 
-app.get( '/*', function( request, response ) {
+    // response.header('Access-Control-Allow-Origin', 'https://blockchain.info' );
+    // response.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  
     try {
         
-        var template = request.params[ 0 ] || 'index';
+        var template = request.params[ 0 ] || 'main';
+
         while ( template[ template.length - 1 ] === '/' ) {
 
             template = template.slice(0, -1);
@@ -50,11 +30,91 @@ app.get( '/*', function( request, response ) {
         console.error(exception);
         
         response.sendStatus(404);
+
     }
+    
+    next();
+
 } );
 
 app.listen( app.get( 'port' ), function() {
 
-	console.log( 'Server is running at :' + app.get( 'port' ) );
-	
+    console.log( 'server is running at :' + app.get( 'port' ) );
+
 } );
+
+if ( app.settings.env === 'development' ) {
+
+    var websocket = require('ws'),
+        bitcoin = require('bitcoin'),
+
+        wss = new websocket.Server( { port: 4225 } ),
+
+        btc = new bitcoin.Client( {
+            host: 'localhost',
+            port: 8332,
+            user: 'bitcoinrpc',
+            pass: 'Fpf2X94gf3Q2n6cPo4j2m3psoDnT5gcCoARe6MLiKqMd'
+        } );
+    
+    wss.on( 'connection', function connection( socket ) {
+
+        socket.on( 'message', function ( json ) {
+
+            var rpc = JSON.parse( json ),
+                answer = function ( e, r ) {
+
+                    socket.send( JSON.stringify( { 
+                        result : r,
+                        error : e,
+                        id : rpc.id
+                    } ) );
+
+                };
+
+            if ( ! rpc.method ) {
+
+                answer();
+                socket.close();
+
+            } else {
+
+                var method = rpc.method;
+
+                // for ( var e = method.indexOf('_'); e !== -1; e = method.indexOf('_', e) ) {
+
+                //     method = method.substr( 0,  e )
+                //           + method.substr( e + 1, 1 ).toUpperCase()
+                //           + method.substr( e + 2 );
+
+                // }
+
+                var proxy = btc[ method ];
+
+                if ( typeof( proxy ) !== "function" ) {
+
+                    answer( 'method not found', method );
+
+                } else if ( rpc.params instanceof Array ) {
+
+                    proxy.apply( btc, answer, rpc.params );
+
+                } else if ( rpc.params ) {
+
+                    proxy.call( btc, answer, rpc.params );
+
+                } else {
+
+                    
+                    proxy.call( btc, answer );
+
+                }
+
+            }
+    
+        });
+
+    });
+
+}
+

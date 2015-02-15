@@ -2,6 +2,6 @@
   "name": "www.cryptocoin.life",
   "description": "A graphical visualization of cryptocoin transactions",
   "repository": "https://github.com/stansage/cryptocoin.life",
-  "logo": "http://www.cryptocoin.life/node.svg",
+  "logo": "http://www.cryptocoin.life/cryptocoin.svg",
   "keywords": ["node", "express", "static"]
 }
