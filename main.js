@@ -1,7 +1,13 @@
+String.prototype.endsWith = function( suffix ) {
+
+    return this.indexOf( suffix, this.length - suffix.length ) !== -1;
+
+};
+
 var express = require( 'express' ),
     app = express();
 
-app.set( 'views', __dirname + '/jade' );
+app.set( 'views', 'jade' );
 app.set( 'view engine', 'jade' );
 app.set( 'port', ( process.env.PORT || 5000 ) );
 
@@ -43,7 +49,7 @@ app.listen( app.get( 'port' ), function() {
 
 } );
 
-if ( app.settings.env === 'development' ) {
+if ( app.settings.env === 'development' && process.env.PWD.endsWith( "www,cryptocoin.life" ) ) {
 
     var websocket = require('ws'),
         bitcoin = require('bitcoin'),

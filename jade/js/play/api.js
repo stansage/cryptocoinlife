@@ -6,7 +6,7 @@
  
 (function(exports) {
     
-    var socket = new WebSocket('ws://46.241.23.52:4225');
+    var socket = new WebSocket('wss://46.241.23.52:4225');
 
 
     function shutdown() {
