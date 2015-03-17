@@ -160,7 +160,7 @@
 
     var view = {
 
-        show: function() {
+        show: function( object ) {
             
             init();
             animate();

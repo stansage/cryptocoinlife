@@ -6,55 +6,30 @@
  
 (function(exports) {
     
-    var socket = new WebSocket('wss://46.241.23.52:4225');
+    var socket = new io.connect('46.241.23.52:4225');
 
+    var model = {
 
-    function shutdown() {
-    
-        socket.send( JSON.stringify( {
-    
-            method : '',
-            id : Date.now()
-    
-        } ) );
-
-    }
-    
-    function request( method ) {
-
-        return function( params ) {
+        request : function ( method, arg, callback ) {
             
-            socket.send( JSON.stringify( {
-    
-                method : method,
-                params: params,
-                id : Date.now()
-    
-            } ) );
-        
-        };
-    
-    }
-        
-    var api = {
-
-        _: shutdown,
-        getBlockHash: request('get_block_hash')
+            socket.on( '#' + method, callback );
+            socket.emit( method, arg );
+        }
 
     };
 
-    if (typeof define === 'function' && define.amd) {
+    if ( typeof define === 'function' && define.amd ) {
     
         /* AMD support */
         define( function() {
     
-            return api;
+            return model;
     
         } );
     
     } else {
     
-        exports.api = api;
+        exports.model = model;
     
     }
 

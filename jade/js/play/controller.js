@@ -1,7 +1,52 @@
+/*
+ *  Copyright 2015 (c) Stan Sage <me@stansage.com>
+ *  Licensed under the GPLv2 License.
+ *  https://github.com/stansage/cryptocoinlife
+ */
+ 
+(function(exports) {
 
-var provider = new api.Provider();
+    function onBlockInfo( info ) {
+        
+        console.dir( info );
+        //model.request( 'get_block', hash, onBlockInfo );
 
-provider
+    }
+    
+    function onBlockHash( hash ) {
+        
+        model.request( 'get_block', hash, onBlockInfo );
+
+    }
+
+    var controller = {
+
+        attach: function( block ) {
+            
+            model.request( 'get_block_hash', block, onBlockHash );
+
+        }
+
+    };
+    
+    if (typeof define === 'function' && define.amd) {
+    
+        /* AMD support */
+        define( function() {
+    
+            return controller;
+    
+        } );
+    
+    } else {
+    
+        exports.controller = controller;
+    
+    }
+
+
+})(this);
+
 // function subscribe( event ) {
     
 //         console.log('activating feed');

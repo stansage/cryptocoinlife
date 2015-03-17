@@ -15,7 +15,7 @@ if ( !Date.now ) {
 
 }
 
-function assert(condition, message) {
+function assert( condition, message ) {
 
     if ( ! condition ) {
 

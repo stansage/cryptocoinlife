@@ -14,7 +14,6 @@ require( [
         var support = [
             
             Modernizr.ajax,
-            Modernizr.websockets,
             Modernizr.webgl,
             WebglDetector.webgl
         
