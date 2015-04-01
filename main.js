@@ -8,7 +8,7 @@ var express = require( 'express' ),
     app = express();
 
 app.set( 'views', 'jade' );
-app.set( 'view engine', 'jade' );
+app.set( 'view engine', 'client' );
 app.set( 'port', ( process.env.PORT || 5000 ) );
 
 app.enable( 'strict routing' );
@@ -18,9 +18,9 @@ app.get( '/*', function( request, response, next ) {
 
     // response.header('Access-Control-Allow-Origin', 'https://blockchain.info' );
     // response.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  
+
     try {
-        
+
         var template = request.params[ 0 ] || 'main';
 
         while ( template[ template.length - 1 ] === '/' ) {
@@ -28,17 +28,17 @@ app.get( '/*', function( request, response, next ) {
             template = template.slice(0, -1);
 
         }
-        
+
         response.render(template);
-        
+
     } catch (exception) {
-        
+
         console.error(exception);
-        
+
         response.sendStatus(404);
 
     }
-    
+
     next();
 
 } );
@@ -62,7 +62,7 @@ if ( app.settings.env === 'development' && process.env.PWD.endsWith( "www,crypto
             user: 'bitcoinrpc',
             pass: 'Fpf2X94gf3Q2n6cPo4j2m3psoDnT5gcCoARe6MLiKqMd'
         } );
-    
+
     wss.on( 'connection', function connection( socket ) {
 
         socket.on( 'message', function ( json ) {
@@ -70,7 +70,7 @@ if ( app.settings.env === 'development' && process.env.PWD.endsWith( "www,crypto
             var rpc = JSON.parse( json ),
                 answer = function ( e, r ) {
 
-                    socket.send( JSON.stringify( { 
+                    socket.send( JSON.stringify( {
                         result : r,
                         error : e,
                         id : rpc.id
@@ -111,13 +111,13 @@ if ( app.settings.env === 'development' && process.env.PWD.endsWith( "www,crypto
 
                 } else {
 
-                    
+
                     proxy.call( btc, answer );
 
                 }
 
             }
-    
+
         });
 
     });
