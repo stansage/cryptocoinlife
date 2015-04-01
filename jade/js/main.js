@@ -6,19 +6,29 @@ require( [
 
         Modernizr.addTest( 'ajax', function() {
 
-            var xhr = new XMLHttpRequest();
-            return !!('onprogress' in xhr);
+            return ( typeof XMLHttpRequest !== "undefined" )
+                && ( XMLHttpRequest.toString().indexOf( "[native code]" ) !== -1 );
 
         } );
+        
+
+        Modernizr.addTest( 'promise', function() {
+
+            return ( typeof Promise !== "undefined" ) 
+                && ( Promise.toString().indexOf( "[native code]" ) !== -1 );
+
+        } );
+        
+
 
         var support = [
             
             Modernizr.ajax,
             Modernizr.webgl,
+            Modernizr.promise,
             WebglDetector.webgl
-        
-        ];
 
+        ];
         var test = support.reduce( function( p, c ) { return  +( c[ 1 ] ) + p; }, 0 );
 
         window.location = test ? "/support/#" + JSON.stringfy( support ) : "/play/";

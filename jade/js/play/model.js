@@ -8,17 +8,46 @@
     
     var socket = new io.connect('46.241.23.52:4225');
 
+
+    // function shutdown() {
+    
+    //     socket.send( JSON.stringify( {
+    
+    //         method : '',
+    //         id : Date.now()
+    
+    //     } ) );
+
+    // }
+    
+    function request( method ) {
+
+        return function( params ) {
+            
+            .on('news', function (data) {
+            socket.send( JSON.stringify( {
+    
+                method : method,
+                params: params,
+                id : Date.now()
+    
+            } ) );
+        
+        };
+    
+    }
+        
     var model = {
 
         request : function ( method, arg, callback ) {
             
-            socket.on( '#' + method, callback );
+            socket.on( '#' + method, functio )
             socket.emit( method, arg );
         }
 
     };
 
-    if ( typeof define === 'function' && define.amd ) {
+    if (typeof define === 'function' && define.amd) {
     
         /* AMD support */
         define( function() {

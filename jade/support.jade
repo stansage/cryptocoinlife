@@ -2,8 +2,11 @@ extends html
 
 block header
     title Crypto Coin Life - Support
+    script(src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js")
 
 block content
+    script
+        include js/webgldetector.js
     script
         include js/support.js
         

@@ -3,7 +3,14 @@ url.href = document.URL;
 
 console.log( url.hash );
 
-// if ( ! WebglDetector.webgl ) {
+
+if ( ! Modernizr.promise ) {
+
+    showError('Your browser does not seem to support <a href="https://www.websocket.org/" style="color:#000">WebSocket</a>.');
+
+}
+
+if ( ! WebglDetector.webgl ) {
 
     var message = window.WebGLRenderingContext ? 'graphics card' : 'browser';
     showError( [
@@ -11,13 +18,13 @@ console.log( url.hash );
         'Find out how to get it <a href="http://get.webgl.org/" style="color:#000">here</a>.'
     ].join( '\n' ));
 
-// }
+}
 
-// if ( ! Modernizr.websockets ) {
+if ( ! Modernizr.websockets ) {
 
     showError('Your browser does not seem to support <a href="https://www.websocket.org/" style="color:#000">WebSocket</a>.');
 
-// }
+}
 
 function showError(error) {
 
