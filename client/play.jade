@@ -2,18 +2,14 @@ extends html
 
 block header
     title Crypto Coin Life - Play
-    script(src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.4/socket.io.min.js")
-    script(src="//cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js")
-    script(src="//ajax.googleapis.com/ajax/libs/threejs/r69/three.min.js")
 
 block content
-    script
-        include js/play/global.js
     script
         include js/play/model.js
     script
         include js/play/view.js
     script
         include js/play/controller.js
-    script.
-        controller.attach();
+    script
+        include js/play.js
+    div(id="viewport")

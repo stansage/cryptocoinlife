@@ -1,0 +1,15 @@
+{
+  "name": "blockchain",
+  "description": "Library that provides bitcoin API via WebSockets",
+  "version": "0.1.0",
+  "main": "lib/api",
+  "keywords": [
+    "bitcoin",
+    "rpc"
+  ],
+  "author": {
+    "name": "Stan Sage",
+    "email": "me@stansage.com",
+    "url": "www.stansage.com"
+  }
+}

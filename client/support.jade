@@ -2,19 +2,8 @@ extends html
 
 block header
     title Crypto Coin Life - Support
-    script(src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js")
+    link(rel="stylesheet" href="http://cdn.webix.com/edge/webix.css" type="text/css")
 
 block content
     script
-        include js/webgldetector.js
-    script
         include js/support.js
-        
-
-// Modernizr.load( {
-//     test: Modernizr.websockets && Modernizr.webgl && WebglDetector.webgl, 
-//     nope: 'support.js',
-//     yep: [ '//cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js',
-//           '//cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js',
-//           'engine.js' ]
-// } );

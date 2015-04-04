@@ -1,188 +1,148 @@
-/*
- *  Copyright 2015 (c) Stan Sage <me@stansage.com>
- *  Licensed under the GPLv2 License.
- *  https://github.com/stansage/cryptocoinlife
- */
- 
-(function(exports) {
+function View( level ) {
 
-    var SCREEN_WIDTH = window.innerWidth,
-        SCREEN_HEIGHT = window.innerHeight,
-            
-        threshold = 1000,
-    
-        mouseX = 0, mouseY = 0,
-    
-        windowHalfX = window.innerWidth / 2,
-        windowHalfY = window.innerHeight / 2,
-    
-        camera, scene, renderer;
+    this.screenWidth = window.innerWidth;
+    this.screenHeight = window.innerHeight;
 
-    function init() {
-    
-        var container = document.createElement( 'div' );
-        document.body.appendChild( container );
-        
-        var tty = document.createElement( 'input' );
-        tty.setAttribute( 'type', 'text' );
-        tty.onkeypress = function ( event ) {
-            if ( event.key === 'Enter' ) 
-                blockchain.send( JSON.stringify( { method : tty.value, id : 1 } ) );
-        }
-        container.appendChild( tty );
-        
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 80, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 10000 );
-    
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
-    
-        container.appendChild( renderer.domElement );
-        
-        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-        document.addEventListener( 'touchstart', onDocumentTouchStart, false );
-        document.addEventListener( 'touchmove', onDocumentTouchMove, false );
-    
-        window.addEventListener( 'resize', onWindowResize, false );
-        window.addEventListener( 'onclick', stop, false );
-        window.addEventListener( 'beforeunload', destroy, false );
+    this.threshold = level;
+
+    this.mouseX = 0;
+    this.mouseY = 0;
+
+    this.windowHalfX = window.innerWidth / 2;
+    this.windowHalfY = window.innerHeight / 2;
+
+
+
+//    var tty = document.createElement( 'input' );
+//    tty.setAttribute( 'type', 'text' );
+//    tty.onkeypress = function ( event ) {
+//        if ( event.key === 'Enter' ) {
+
+//            blockchain.send( JSON.stringify( { method : tty.value, id : 1 } ) );
+
+//        }
+//    }
+//    container.appendChild( tty );
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera( 80, this.screenWidth / this.screenHeight, 1, 10000 );
+    this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+
+    //this.renderer.setPixelRatio( window.devicePixelRatio );
+    this.renderer.setSize( this.screenWidth, this.screenHeight );
+
+    document.getElementById( "viewport" ).appendChild( this.renderer.domElement );
+
+//    window.addEventListener( 'beforeunload', destroy, false );
+
+};
+
+View.prototype.splash = function() {
+
+    document.addEventListener( "mousemove", this.onDocumentMouseMove, false );
+    document.addEventListener( "touchstart", this.onDocumentTouchStart, false );
+    document.addEventListener( "touchmove", this.onDocumentTouchMove, false );
+    window.addEventListener( "resize", this.onWindowResize, false );
+//    window.addEventListener( 'onclick', stop, false );
+
+}
+
+View.prototype.update = function( data ) {
+
+    console.log( "data = " + data );
+
+}
+
+
+// function parseBlock( block ) {
+
+//     console.assert( block.n_tx === block.tx.length );
+
+//     for ( var i = 0; i < block.n_tx; i ++) {
+
+//         console.log( block.tx[ i ].tx_index );
+//         var request = 'https://blockchain.info/tx-index/' + block.tx[ i ].tx_index + '?format=json&cors=true';
+
+//         $.getJSON( request, parseTransaction );
+
+//     }
+
+// }
+
+// function parseTransaction( transaction ) {
+
+//     console.dir( transaction );
+// }
+
+
+View.prototype.onWindowResize = function() {
+
+    this.windowHalfX = window.innerWidth / 2;
+    this.windowHalfY = window.innerHeight / 2;
+
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+
+};
+
+
+View.prototype.onDocumentMouseMove = function( event ) {
+
+    this.mouseX = event.clientX - this.windowHalfX;
+    this.mouseY = event.clientY - this.windowHalfY;
+
+}
+
+View.prototype.onDocumentTouchStart = function( event ) {
+
+    if ( event.touches.length > 1 ) {
+
+        event.preventDefault();
+
+        this.mouseX = event.touches[ 0 ].pageX - this.windowHalfX;
+        this.mouseY = event.touches[ 0 ].pageY - this.windowHalfY;
+
     }
 
-    
-    // function parseBlock( block ) {
-    
-    //     console.assert( block.n_tx === block.tx.length );
-        
-    //     for ( var i = 0; i < block.n_tx; i ++) {
-        
-    //         console.log( block.tx[ i ].tx_index );
-    //         var request = 'https://blockchain.info/tx-index/' + block.tx[ i ].tx_index + '?format=json&cors=true';
-        
-    //         $.getJSON( request, parseTransaction );
-        
-    //     }
-    
-    // }
-    
-    // function parseTransaction( transaction ) {
-        
-    //     console.dir( transaction );
-    // }
-    
-    
-    function stop() {
-    
-        console.log('deactivating feed');
-        
-        api._();
-    
-    }
-    
-    function destroy() {
-    
-        stop();
+};
+
+View.prototype.onDocumentTouchMove = function( event ) {
+
+    if ( event.touches.length == 1 ) {
+
+        event.preventDefault();
+
+        this.mouseX = event.touches[ 0 ].pageX - this.windowHalfX;
+        this.mouseY = event.touches[ 0 ].pageY - this.windowHalfY;
 
     }
-    
-    function onWindowResize() {
-    
-        windowHalfX = window.innerWidth / 2;
-        windowHalfY = window.innerHeight / 2;
-    
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    
-        renderer.setSize( window.innerWidth, window.innerHeight );
-    
-    }
-    
-    
-    
-    function onDocumentMouseMove( event ) {
-    
-        mouseX = event.clientX - windowHalfX;
-        mouseY = event.clientY - windowHalfY;
-    
-    }
-    
-    function onDocumentTouchStart( event ) {
-    
-    	if ( event.touches.length > 1 ) {
-    
-    		event.preventDefault();
-    
-    		mouseX = event.touches[ 0 ].pageX - windowHalfX;
-    		mouseY = event.touches[ 0 ].pageY - windowHalfY;
-    
-    	}
-    
-    }
-    
-    function onDocumentTouchMove( event ) {
-    
-    	if ( event.touches.length == 1 ) {
-    
-    		event.preventDefault();
-    
-    		mouseX = event.touches[ 0 ].pageX - windowHalfX;
-    		mouseY = event.touches[ 0 ].pageY - windowHalfY;
-    
-    	}
-    
-    }
-    
-    
-    function animate() {
-    
-        requestAnimationFrame( animate );
-    
-        render();
-    
-    }
+
+};
+
+
+View.prototype.animate = function() {
+
+    this.requestAnimationFrame( this.animate );
+    this.render();
+
+};
     //     var geometry = new THREE.SphereGeometry();
         //     var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
         //     var sphere = new THREE.Mesh( geometry, material );
         //     scene.add( sphere );
-    
-    function render() {
-    
-        var position = camera.position;
-        
-        position.x += ( - mouseX + 200 - position.x ) * .05;
-        position.y += ( - mouseY + 200 - position.y ) * .05;
-        
-        camera.lookAt( position );
-    
-        renderer.render( scene, camera );
-    
-    }
 
-    var view = {
+View.prototype.render = function() {
 
-        show: function( object ) {
-            
-            init();
-            animate();
-            
-        }
+    var position = this.camera.position;
 
-    };
-    
-    if (typeof define === 'function' && define.amd) {
-    
-        /* AMD support */
-        define( function() {
-    
-            return view;
-    
-        } );
-    
-    } else {
-    
-        exports.view = view;
-    
-    }
+    position.x += ( - this.mouseX + 200 - position.x ) * .05;
+    position.y += ( - this.mouseY + 200 - position.y ) * .05;
 
+    this.camera.lookAt( position );
 
-})(this);
+    this.renderer.render( this.scene, this.camera );
+
+};
+
