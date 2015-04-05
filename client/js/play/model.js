@@ -7,6 +7,9 @@ function Model( host ) {
             callback( JSON.parse( message.data ) );
         }
     }
+    this.onConnect = function( params ) {
+        this.socket.send( params );
+    };
 }
 
 Model.prototype.subscribe = function( callback ) {
@@ -15,6 +18,10 @@ Model.prototype.subscribe = function( callback ) {
 
 Model.prototype.unsubscribe = function() {
     this.socket.close();
+};
+
+Model.prototype.load = function( layout ) {
+    this.socket.onopen = this.onConnect.bind( this, JSON.stringify( layout ) );
 };
 
 // var api = function() {

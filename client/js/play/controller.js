@@ -10,8 +10,8 @@ Controller.prototype.attach = function( model, view ) {
     window.onresize = view.onWindowResize.bind( view );
     window.onbeforeunload = model.unsubscribe.bind( model );
 
-
     model.subscribe( view.onUpdate.bind( view ) );
+    model.load( view.getLayout() );
     view.triggerAnimation();
 };
 

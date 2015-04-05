@@ -1,31 +1,17 @@
-function View( level ) {
-    this.last = undefined;
-    this.threshold = level;
+function View() {
     this.mouseX = 0;
     this.mouseY = 0;
     this.windowHalfX = window.innerWidth / 2;
     this.windowHalfY = window.innerHeight / 2;
+    this.stats = new Stats();
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 1, 10000 );
-    this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+    this.camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    this.renderer = new THREE.WebGLRenderer();
     this.animate = function() {
-        if ( ! this.last ) {
-            return;
-        }
-
-        window.requestAnimationFrame( this.animate.bind( this ) );
-
-        var position = this.camera.position;
-        position.x += ( - this.mouseX + 200 - position.x ) * .05;
-        position.y += ( - this.mouseY + 200 - position.y ) * .05;
-
-        this.camera.lookAt( position );
+        this.stats.begin();
         this.renderer.render( this.scene, this.camera );
-
-
-        var current = Date.now();
-        console.log( "FPS:", 1000.0 / ( current - this.last ) );
-        this.last = current;
+        this.stats.end();
+        window.requestAnimationFrame( this.animate.bind( this ) );
     }
 
     this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -33,34 +19,47 @@ function View( level ) {
         this.renderer.setPixelRatio( window.devicePixelRatio );
     }
 
+
+    this.stats.domElement.style.position = "absolute";
+    this.stats.domElement.style.bottom = "0px";
+    this.stats.domElement.style.right = "0px";
+
     document.body.appendChild( this.renderer.domElement );
+    document.body.appendChild( this.stats.domElement );
+
+    this.camera.position.z = 500;
 };
+
+View.prototype.getLayout = function() {
+    return {
+        width: window.innerWidth,
+        heigth: window.innerHeight,
+        deep: this.camera.position.z
+    };
+}
 
 View.prototype.onUpdate = function( objects ) {
     for ( var i = 0; i < objects.length; ++ i ) {
-        var mesh = {};
+        var object = objects[ i ];
+        var geometry = new THREE.SphereGeometry( object.radius, object.quality, object.quality );
+        var material = new THREE.MeshBasicMaterial( { color: object.color } );
+        var mesh = new THREE.Mesh( geometry, material );
 
-        if ( i < this.scene.children.length ) {
-            mesh = this.scene.children[ i ];
-
-            assert( mesh instanceof THREE.Mesh, "Invalid mesh " + mesh );
-
-            mesh.geometry.boundingSphere.radius = objects[ i ].radius;
-            mesh.material.color = objects[ i ].color;
+        if ( object.index !== -1 ) {
+            this.scene.children[ object.index ] = mesh;
         } else {
-            var geometry = new THREE.SphereGeometry( objects[ i ].radius );
-            var material = new THREE.MeshBasicMaterial( { color: objects[ i ].color } );
-            mesh = new THREE.Mesh( geometry, material );
-
-            mesh.position.x = objects[ i ].position.x;
-            mesh.position.y = objects[ i ].position.y;
-            mesh.position.z = objects[ i ].position.z;
-
             this.scene.add( mesh );
         }
 
-        assert( !! mesh );
+        if ( object.position ) {
+            assert( object.position.length === 3, "View:onUpdate - Invalid position " + object.position );
+
+            mesh.position.x = object.position[ 0 ];
+            mesh.position.y = object.position[ 1 ];
+            mesh.position.z = object.position[ 2 ];
+        }
     }
+
 }
 
 
@@ -99,10 +98,5 @@ View.prototype.onDocumentTouchMove = function( event ) {
 };
 
 View.prototype.triggerAnimation = function() {
-    if ( this.last ) {
-        this.last = undefined;
-    } else {
-        this.last = Date.now();
-        this.animate.call( this );
-    }
+    this.animate.call( this );
 };

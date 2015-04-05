@@ -14,12 +14,16 @@ var ResponseType = {
 function Api( provider ) {
     this.sessions = [];
     this.rpc = new Rpc( provider );
+    this.findSession = function( socket ) {
+        for ( var i = 0; i < this.sessions.length; ++ i ) {
+            var session = this.sessions[ i ];
+            if ( this.sessions[ i ].hasClient( socket ) ) {
+                return i;
+            }
+        }
+        return -1;
+    };
     this.onResponse = function( session, type, response ) {
-//        console.log( "Api:onResponse:scene:", scene );
-//        console.log( "Api:onResponse:type:", type );
-        //console.log( "Api:onResponse:socket:", socket );
-//        console.log( "Api:onResponse:response:", response );
-
         if ( ! session.isActive() ) {
             return;
         }
@@ -45,10 +49,14 @@ function Api( provider ) {
         }
     };
     this.onRequest = function( socket, event ) {
-        //console.log( "Api:onRequest:this:", this );
-        console.log( "Api:onRequest:socket:", socket );
-        console.log( "Api:onRequest:event:", event );
-//        this.rpc.getTransaction( event.data, this.onResponse.bind( this, socket, ResponseType.TRANSACTION ) );
+        console.log( "Api:onRequest:event.data:", event.data );
+
+        var session = this.findSession( socket );
+        if ( session === -1 ) {
+            throw "Unknown session";
+        }
+        this.sessions[ session ].setLayout( JSON.parse( event.data ) );
+        this.rpc.getBlock( 0, this.onResponse.bind( this, this.sessions[ session ], ResponseType.BLOCK ) );
     }
 }
 
@@ -56,19 +64,14 @@ Api.prototype.subscribe = function( socket ) {
     socket.onmessage = this.onRequest.bind( this, socket );
 
     var session = new Session( socket );
-
     this.sessions.push( session );
-    this.rpc.getBlock( 0, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
 };
 
 Api.prototype.unsubscribe = function( socket ) {
-    for ( var i = 0; i < this.sessions.length; ++ i ) {
-        var session = this.sessions[ i ];
-        if ( session.hasClient( socket ) ) {
-            session.setActive( false );
-            this.sessions.slice( i, 1 );
-            break;
-        }
+    var session = this.findSession( socket );
+    if ( session !== -1 ) {
+        this.sessions[ session ].setActive( false );
+        this.sessions.splice( session, 1 );
     }
 };
 
