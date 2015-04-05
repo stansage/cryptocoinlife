@@ -898,3 +898,4 @@ node_modules/ws/package.json
 node_modules/ws/README.md
 blockchain/lib/bitcoin.js
 client/js/play.js
+blockchain/lib/session.js

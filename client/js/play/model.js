@@ -1,17 +1,21 @@
 function Model( host ) {
     this.socket = new WebSocket( host );
+    this.onMessage = function( callback, message ) {
+        if ( ! message.data ) {
+            console.warn( "No data" );
+        } else {
+            callback( JSON.parse( message.data ) );
+        }
+    }
 }
 
-Object.defineProperty( Model.prototype, 'onchanged', {
-    get: function
-} )
-Model.prototype.subscribe = function( callaback ) {
-    console.log( callback );
-    this.socket.onmessage = function( event ) {
-        callback( event.data );
-    };
+Model.prototype.subscribe = function( callback ) {
+    this.socket.onmessage = this.onMessage.bind( this, callback );
 };
 
+Model.prototype.unsubscribe = function() {
+    this.socket.close();
+};
 
 // var api = function() {
 

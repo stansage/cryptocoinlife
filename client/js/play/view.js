@@ -1,82 +1,70 @@
 function View( level ) {
-
-    this.screenWidth = window.innerWidth;
-    this.screenHeight = window.innerHeight;
-
+    this.last = undefined;
     this.threshold = level;
-
     this.mouseX = 0;
     this.mouseY = 0;
-
     this.windowHalfX = window.innerWidth / 2;
     this.windowHalfY = window.innerHeight / 2;
-
-
-
-//    var tty = document.createElement( 'input' );
-//    tty.setAttribute( 'type', 'text' );
-//    tty.onkeypress = function ( event ) {
-//        if ( event.key === 'Enter' ) {
-
-//            blockchain.send( JSON.stringify( { method : tty.value, id : 1 } ) );
-
-//        }
-//    }
-//    container.appendChild( tty );
-
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 80, this.screenWidth / this.screenHeight, 1, 10000 );
+    this.camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 1, 10000 );
     this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+    this.animate = function() {
+        if ( ! this.last ) {
+            return;
+        }
 
-    //this.renderer.setPixelRatio( window.devicePixelRatio );
-    this.renderer.setSize( this.screenWidth, this.screenHeight );
+        window.requestAnimationFrame( this.animate.bind( this ) );
 
-    document.getElementById( "viewport" ).appendChild( this.renderer.domElement );
+        var position = this.camera.position;
+        position.x += ( - this.mouseX + 200 - position.x ) * .05;
+        position.y += ( - this.mouseY + 200 - position.y ) * .05;
 
-//    window.addEventListener( 'beforeunload', destroy, false );
+        this.camera.lookAt( position );
+        this.renderer.render( this.scene, this.camera );
 
+
+        var current = Date.now();
+        console.log( "FPS:", 1000.0 / ( current - this.last ) );
+        this.last = current;
+    }
+
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    if ( 'setPixelRatio' in this.renderer ) {
+        this.renderer.setPixelRatio( window.devicePixelRatio );
+    }
+
+    document.body.appendChild( this.renderer.domElement );
 };
 
-View.prototype.splash = function() {
+View.prototype.onUpdate = function( objects ) {
+    for ( var i = 0; i < objects.length; ++ i ) {
+        var mesh = {};
 
-    document.addEventListener( "mousemove", this.onDocumentMouseMove, false );
-    document.addEventListener( "touchstart", this.onDocumentTouchStart, false );
-    document.addEventListener( "touchmove", this.onDocumentTouchMove, false );
-    window.addEventListener( "resize", this.onWindowResize, false );
-//    window.addEventListener( 'onclick', stop, false );
+        if ( i < this.scene.children.length ) {
+            mesh = this.scene.children[ i ];
 
+            assert( mesh instanceof THREE.Mesh, "Invalid mesh " + mesh );
+
+            mesh.geometry.boundingSphere.radius = objects[ i ].radius;
+            mesh.material.color = objects[ i ].color;
+        } else {
+            var geometry = new THREE.SphereGeometry( objects[ i ].radius );
+            var material = new THREE.MeshBasicMaterial( { color: objects[ i ].color } );
+            mesh = new THREE.Mesh( geometry, material );
+
+            mesh.position.x = objects[ i ].position.x;
+            mesh.position.y = objects[ i ].position.y;
+            mesh.position.z = objects[ i ].position.z;
+
+            this.scene.add( mesh );
+        }
+
+        assert( !! mesh );
+    }
 }
-
-View.prototype.update = function( data ) {
-
-    console.log( "data = " + data );
-
-}
-
-
-// function parseBlock( block ) {
-
-//     console.assert( block.n_tx === block.tx.length );
-
-//     for ( var i = 0; i < block.n_tx; i ++) {
-
-//         console.log( block.tx[ i ].tx_index );
-//         var request = 'https://blockchain.info/tx-index/' + block.tx[ i ].tx_index + '?format=json&cors=true';
-
-//         $.getJSON( request, parseTransaction );
-
-//     }
-
-// }
-
-// function parseTransaction( transaction ) {
-
-//     console.dir( transaction );
-// }
 
 
 View.prototype.onWindowResize = function() {
-
     this.windowHalfX = window.innerWidth / 2;
     this.windowHalfY = window.innerHeight / 2;
 
@@ -84,65 +72,37 @@ View.prototype.onWindowResize = function() {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize( window.innerWidth, window.innerHeight );
-
 };
 
 
 View.prototype.onDocumentMouseMove = function( event ) {
-
     this.mouseX = event.clientX - this.windowHalfX;
     this.mouseY = event.clientY - this.windowHalfY;
-
 }
 
 View.prototype.onDocumentTouchStart = function( event ) {
-
     if ( event.touches.length > 1 ) {
-
         event.preventDefault();
 
         this.mouseX = event.touches[ 0 ].pageX - this.windowHalfX;
         this.mouseY = event.touches[ 0 ].pageY - this.windowHalfY;
-
     }
-
 };
 
 View.prototype.onDocumentTouchMove = function( event ) {
-
     if ( event.touches.length == 1 ) {
-
         event.preventDefault();
 
         this.mouseX = event.touches[ 0 ].pageX - this.windowHalfX;
         this.mouseY = event.touches[ 0 ].pageY - this.windowHalfY;
-
     }
-
 };
 
-
-View.prototype.animate = function() {
-
-    this.requestAnimationFrame( this.animate );
-    this.render();
-
+View.prototype.triggerAnimation = function() {
+    if ( this.last ) {
+        this.last = undefined;
+    } else {
+        this.last = Date.now();
+        this.animate.call( this );
+    }
 };
-    //     var geometry = new THREE.SphereGeometry();
-        //     var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        //     var sphere = new THREE.Mesh( geometry, material );
-        //     scene.add( sphere );
-
-View.prototype.render = function() {
-
-    var position = this.camera.position;
-
-    position.x += ( - this.mouseX + 200 - position.x ) * .05;
-    position.y += ( - this.mouseY + 200 - position.y ) * .05;
-
-    this.camera.lookAt( position );
-
-    this.renderer.render( this.scene, this.camera );
-
-};
-

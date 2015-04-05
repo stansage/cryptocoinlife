@@ -39,9 +39,7 @@ server.listen( app.get( "port" ), function() {
 var wss = new ws.Server( { server: server, path: "/api" } );
 wss.on( "connection", function( socket ) {
     api.subscribe( socket );
-    socket.on( "close", function() {
-        api.unsubscribe( socket );
-    } );
+    socket.on( "close", api.unsubscribe.bind( api, socket ) );
 } );
 
 

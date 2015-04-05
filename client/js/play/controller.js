@@ -2,8 +2,17 @@ function Controller() {
 }
 
 Controller.prototype.attach = function( model, view ) {
-    view.splash();
-    model.changed = view.update;
+    document.onmousemove = view.onDocumentMouseMove.bind( view );
+    document.ontouchstart = view.onDocumentTouchStart.bind( view );
+    document.ontouchmove = view.onDocumentTouchMove.bind( view );
+
+    window.onclick = view.triggerAnimation.bind( view );
+    window.onresize = view.onWindowResize.bind( view );
+    window.onbeforeunload = model.unsubscribe.bind( model );
+
+
+    model.subscribe( view.onUpdate.bind( view ) );
+    view.triggerAnimation();
 };
 
 //( function( exports ) {
