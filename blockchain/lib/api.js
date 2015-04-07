@@ -24,66 +24,84 @@ Api.prototype.subscribe = function( socket ) {
 };
 
 Api.prototype.unsubscribe = function( socket ) {
-    var index = this.findSession( socket );
+    var index = this.find( socket );
     if ( index !== -1 ) {
-        this.sessions[ session ].close( undefined );
-        this.sessions.splice( session, 1 );
+        this.sessions[ index ].client = null;
+        this.sessions.splice( index, 1 );
     }
 };
 
-Api.prototype.findSession = function( socket ) {
+Api.prototype.find = function( socket ) {
     for ( var i = 0; i < this.sessions.length; ++ i ) {
         var session = this.sessions[ i ];
-        if ( this.sessions[ i ].hasClient( socket ) ) {
+        if ( this.sessions[ i ].client === socket ) {
             return i;
         }
     }
     return -1;
 };
 
+
+Api.prototype.nextBlock = function( session, block ) {
+    var duration = session.whenReady();
+
+//    console.log( "Api:nextBlock:duration:", duration );
+
+    if ( duration !== 0 ) {
+        setTimeout( this.nextBlock.bind( this, session, block ), duration );
+    } else {
+        session.time = Date.now();
+        this.rpc.getBlock( block, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
+    }
+}
+
 Api.prototype.onResponse = function( session, type, response ) {
-    if ( ! session.isActive() ) {
+    if ( ! session.active()  ) {
         return;
     }
 
     switch ( type ) {
     case ResponseType.TRANSACTION:
-        session.add( response );
+        session.onTransaction( response );
         break;
     case ResponseType.BLOCK:
         for ( var i = 0; i < response.tx.length; ++ i ) {
             this.rpc.getTransaction( response.tx[ i ], this.onResponse.bind( this, session, ResponseType.TRANSACTION ) );
         }
         if ( response.nextblockhash ) {
-            this.rpc.getBlock( response.nextblockhash, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
+            this.nextBlock( session, response.nextblockhash );
         } else {
-            console.warn( "Ap:onRespose: All blocks exhausted", response );
+            console.warn( "Api:onRespose: All blocks exhausted", response );
         }
 
         break;
     default:
-        console.warn( "Ap:onRespose: Invalid response type:", type );
-        break;
+        throw "Api:onRespose: Invalid response type " + type;
     }
 };
 
 Api.prototype.onRequest = function( socket, event ) {
-    console.log( "Api:onRequest:event.data:", event.data );
-
-    var index = this.findSession( socket );
+    var index = this.find( socket );
     if ( index === -1 ) {
-        throw "Ap:onRequest: Unknown session";
+        throw "Api:onRequest: Unknown session";
     }
-    var session = this.sessions[ index ];
-    var argument = JSON.parse( event.data );
 
-    if ( session.isActive() ) {
-        session.stop( argument );
-    } else {
-        session.start( argument );
-        this.rpc.getBlock( 0, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
+    var session = this.sessions[ index ];
+    if ( ! session.client ) {
+        throw "Api:onRequest: Invalid session";
+    }
+
+    var active = session.active();
+    session.config = JSON.parse( event.data );
+
+    if ( session.active() ) {
+        this.nextBlock( session, session.config.offset );
+    } else if ( active ) {
+        console.info( "Api:onRequest: Closing session", index );
+        socket.close();
     }
 }
+
 
 module.exports = {
     createApi: function( provider ) {

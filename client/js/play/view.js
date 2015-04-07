@@ -1,5 +1,4 @@
 function View( width, height ) {
-    this.animation = true;
     this.width = width;
     this.height = height;
     this.stats = new Stats();
@@ -20,34 +19,36 @@ function View( width, height ) {
     this.camera.position.z = 500;
 };
 
-View.prototype.animate = function() {
-    if ( this.animation ) {
-        this.stats.begin();
-        this.renderer.render( this.scene, this.camera );
-        this.stats.end();
-        window.requestAnimationFrame( this.animate.bind( this ) );
-    }
-};
-
 View.prototype.getDomElements = function() {
     return [ this.renderer.domElement, this.stats.domElement ];
 };
 
-View.prototype.getLayout = function() {
-    return {
-        width: this.width,
-        heigth: this.height,
-        deep: this.camera.position.z,
-        bound: this.camera.far
-    };
-}
+View.prototype.resize = function( width, height ) {
+    this.width = width;
+    this.height = height;
 
-View.prototype.onUpdate = function( objects ) {
-//    console.log( "View:onUpdate:", objects.length );
-//    this.animation = false;
+    this.camera.aspect = this.width / this.height;
+    this.camera.updateProjectionMatrix();
 
-//    for ( var i = 0; i < objects.length; ++ i ) {
-//        var object = objects[ i ];
+    this.renderer.setSize( this.width, this.height );
+};
+
+View.prototype.animate = function( model ) {
+    this.stats.begin();
+
+    if ( model.source ) {
+        if ( this.scene.children.length === 0 ) {
+            var geometry = new THREE.SphereGeometry( model.source.radius, model.source.quality, model.source.quality );
+            var material = new THREE.MeshBasicMaterial( { color: model.source.color } );
+            var mesh = new THREE.Mesh( geometry, material );
+            this.scene.add( mesh );
+        } else if ( Math.abs( model.source.radius - this.scene.children[ 0 ].geometry.boundingSphere.radius ) > 1 ) {
+            this.scene.children[ 0 ].geometry = new THREE.SphereGeometry( model.source.radius, model.source.quality, model.source.quality );
+        }
+    }
+
+//    for ( var i = 0; i < model.length; ++ i ) {
+
 //        var geometry = new THREE.SphereGeometry( object.radius, object.quality, object.quality );
 //        var material = new THREE.MeshBasicMaterial( { color: object.color } );
 //        var mesh = new THREE.Mesh( geometry, material );
@@ -67,16 +68,10 @@ View.prototype.onUpdate = function( objects ) {
 //        }
 //    }
 
-//    this.animation = true;
-    this.animate();
-}
+    this.renderer.render( this.scene, this.camera );
+    this.stats.end();
 
-View.prototype.resize = function( width, height ) {
-    this.width = width;
-    this.height = height;
-
-    this.camera.aspect = this.width / this.height;
-    this.camera.updateProjectionMatrix();
-
-    this.renderer.setSize( this.width, this.height );
+    window.requestAnimationFrame( this.animate.bind( this, model ) );
 };
+
+

@@ -7,7 +7,9 @@ require( [
         var view = new View( window.innerWidth, window.innerHeight );
         var controller = new Controller( model, view );
 
+        model.load( { offset: 0, delay: 1 } );
         controller.attach( document.body );
+        view.animate( model );
     }
 );
 

@@ -8,56 +8,30 @@ var Algebra = require( "./algebra" );
 
 function Session( client ) {
     this.LIMIT = 21000000.0;
-    this.client = client;
-    this.config = undefined;
     this.source = this.LIMIT;
-    this.makeObject = function( index, volume, scale, position ) {
-        var result = { index: index };
-
-        if ( volume !== undefined ) {
-            var x = Math.PI * 4.0 / 3.0;
-            result.radius = parseInt( Math.pow( volume / x , 1 / 3 ) );
-            result.quality = Math.log( result.radius );
-        }
-        if ( scale !== undefined ) {
-            result.color = 0xff0000 + ( parseInt( scale * 0xff ) << 8 );
-        }
-        if ( position !== undefined ) {
-            result.position = position;
-        }
-
-        return result;
-    }
+    this.client = client;
+    this.config = {};
+    this.time = Date.now();
 }
 
-Session.prototype.isActive = function() {
-    return !! this.config;
-};
-
-Session.prototype.hasClient = function( client ) {
-    return ( !! this.client ) && ( ! client || this.client === client );
-};
-
-Session.prototype.close = function( client ) {
-    stop();
-    this.client = undefined;
-};
-
-Session.prototype.start = function( config ) {
-    this.config = config;
+Session.prototype.active = function() {
+    return ( !! this.client ) && ( Object.keys( this.config ).length !== 0 );
 }
 
-Session.prototype.stop = function( stats ) {
-    this.config = undefined;
+Session.prototype.whenReady = function() {
+    var timeout = Math.max( 1, this.config.delay || 1000 );
+    var elapsed = Date.now() - this.time;
+    return elapsed < timeout ? timeout - elapsed : 0;
 }
 
-Session.prototype.add = function( transaction ) {
-    if ( ! this.isActive() ) {
+Session.prototype.onTransaction = function( transaction ) {
+    if ( ! this.active() ) {
         return;
     }
-    if ( ! this.hasClient() ) {
-        throw "Session:add Session must be in active state";
-    }
+
+//    if ( ! this.hasClient() ) {
+//        throw "Session:add Session must be in active state";
+//    }
 
 //    if ( this.objects.length === 0 ) {
 //        this.objects.push( this.makeObject( -1, this.root, 1.0 ) );
@@ -109,7 +83,11 @@ Session.prototype.add = function( transaction ) {
 
 
     //console.log( this.items );
-    var packet = { source: this.source };
+//    var packet = { source: this.source };
+    var packet = {
+        radius: Algebra.sphereRadius( this.source ),
+        scale: this.source / this.LIMIT
+    };
     this.client.send( JSON.stringify( packet ) );
 }
 

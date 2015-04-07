@@ -19,6 +19,11 @@ module.exports = {
             coordinates[ 0 ] * Math.sin( coordinates[ 1 ] ) * Math.sin( coordinates[ 2 ] ),
             coordinates[ 0 ] * Math.cos( coordinates[ 1 ] )
         ];
+    },
+
+    sphereRadius : function( volume ) {
+        var x = Math.PI * 4.0 / 3.0;
+        return Math.pow( volume / x , 1 / 3 );
     }
 };
 

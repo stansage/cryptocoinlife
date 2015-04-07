@@ -16,7 +16,7 @@ Controller.prototype.attach = function( dom ) {
 
 //    window.addEventListener( "click", view.triggerAnimation.bind( view ) );
     window.addEventListener( "resize", this.onResize.bind( this ), false );
-    window.addEventListener( "beforeunload", this.model.unsubscribe.bind( this.model ), false );
+    window.addEventListener( "beforeunload", this.model.unload.bind( this.model ), false );
 
     // FF doesn't recognize mousewheel as of FF3.x
     var mousewheelevt = ( /Firefox/i.test(navigator.userAgent) )? "DOMMouseScroll" : "mousewheel"
@@ -27,10 +27,6 @@ Controller.prototype.attach = function( dom ) {
         // WC3 browsers
         document.addEventListener( mousewheelevt, this.onMouseWheel.bind( this ), false );
     }
-
-    this.model.subscribe( this.view.onUpdate.bind( this.view ) );
-    this.model.load( this.view.getLayout() );
-    this.view.animate();
 };
 
 Controller.prototype.onResize = function() {

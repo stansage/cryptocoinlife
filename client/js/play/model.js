@@ -1,31 +1,33 @@
 function Model( host ) {
+    this.source = undefined;
     this.socket = new WebSocket( host );
-    this.onMessage = function( callback, message ) {
-        if ( ! message.data ) {
-            console.warn( "No data" );
-        } else {
-            callback( JSON.parse( message.data ) );
-        }
-    }
+    this.socket.onmessage = this.onMessage.bind( this );
 }
 
-Model.prototype.subscribe = function( callback ) {
-    this.socket.onmessage = this.onMessage.bind( callback );
-};
-
-Model.prototype.unsubscribe = function() {
-    this.socket.close();
-};
-
 Model.prototype.load = function( config ) {
-    this.socket.onopen = this.onConnect.bind( this, JSON.stringify( config ) );
+    this.socket.onopen = this.onOpen.bind( this, JSON.stringify( config ) );
 };
 
-Model.prototype.onConnect = function( config ) {
+Model.prototype.unload = function() {
+    this.socket.close();
+}
+
+Model.prototype.onOpen = function( config ) {
     this.socket.send( config );
 };
 
-
+Model.prototype.onMessage = function( message ) {
+    if ( ! message.data ) {
+        console.warn( "Model: No data" );
+    } else {
+        var packet = JSON.parse( message.data );
+        this.source = {
+            radius : packet.radius,
+            quality: packet.radius / 2,
+            color : 0xff0000 + ( parseInt( packet.scale * 0xff ) << 8 )
+        };
+    }
+};
 // var api = function() {
 
 //     var ws: new WebSocket('ws://46.241.23.52:4225'),

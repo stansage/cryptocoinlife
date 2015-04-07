@@ -16,8 +16,8 @@ var api = Blockchain.createApi( new Bitcoin.Client( {
     host: "localhost",
     port: 8332,
     user: "bitcoinrpc",
-    pass: "Fpf2X94gf3Q2n6cPo4j2m3psoDnT5gcCoARe6MLiKqMd",
-    //pass: "EhvpRV98EsfrmXkZatVkG45f4rSTCvfh3Zz9ohai85rV",
+    //pass: "Fpf2X94gf3Q2n6cPo4j2m3psoDnT5gcCoARe6MLiKqMd",
+    pass: "EhvpRV98EsfrmXkZatVkG45f4rSTCvfh3Zz9ohai85rV",
     timeout: 30000
 } ) );
 
