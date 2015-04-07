@@ -899,3 +899,6 @@ node_modules/ws/README.md
 blockchain/lib/bitcoin.js
 client/js/play.js
 blockchain/lib/session.js
+blockchain/lib/algebra.js
+test.js
+server.js

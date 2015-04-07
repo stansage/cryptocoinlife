@@ -4,15 +4,7 @@
  *  https://github.com/stansage/cryptocoinlife
  */
 
-function Rpc( provider ) {
-    var client = new provider.Client( {
-        host: "localhost",
-        port: 8332,
-        user: "bitcoinrpc",
-        //pass: "Fpf2X94gf3Q2n6cPo4j2m3psoDnT5gcCoARe6MLiKqMd",
-        pass: "EhvpRV98EsfrmXkZatVkG45f4rSTCvfh3Zz9ohai85rV",
-        timeout: 30000
-    } );
+function Rpc( client ) {
     this.client = client;
     this.makeResult = function( rpc, key, callback ) {
         return function( error, result, headers ) {

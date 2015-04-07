@@ -4,43 +4,45 @@
  *  https://github.com/stansage/cryptocoinlife
  */
 
-var bitcoin = require( "bitcoin" );
-var ws = require( "ws" );
-var express = require( "express" );
-var app = express();
-var api = require( "./blockchain" ).createApi( bitcoin );
-var server = require( "http" ).createServer( app );
+var server = require( "./server" );
+server.start();
 
-app.set( "views", "client" );
-app.set( "view engine", "jade" );
-app.set( "port", ( process.env.PORT || 5000 ) );
+//var ws = require( "ws" );
+//var express = require( "express" );
+//var app = express();
+//var api = require( "./blockchain" ).createApi( bitcoin );
+//var server = require( "http" ).createServer( app );
 
-app.enable( "strict routing" );
-app.use( express.static( __dirname + "/public" ) );
+//app.set( "views", "client" );
+//app.set( "view engine", "jade" );
+//app.set( "port", ( process.env.PORT || 5000 ) );
 
-app.get( "/*", function( request, response, next ) {
-    try {
-        var template = request.params[ 0 ] || "main";
-        while ( template[ template.length - 1 ] === "/" ) {
-            template = template.slice( 0, -1 );
-        }
-        response.render( template );
-    } catch ( exception ) {
-        console.error( exception );
-        response.sendStatus( 404 );
-    }
-    next();
-} );
+//app.enable( "strict routing" );
+//app.use( express.static( __dirname + "/public" ) );
 
-server.listen( app.get( "port" ), function() {
-    console.log( "server is running at :" + app.get( "port" ) );
-} );
+//app.get( "/*", function( request, response, next ) {
+//    try {
+//        var template = request.params[ 0 ] || "main";
+//        while ( template[ template.length - 1 ] === "/" ) {
+//            template = template.slice( 0, -1 );
+//        }
+//        response.render( template );
+//    } catch ( exception ) {
+//        console.error( exception );
+//        response.sendStatus( 404 );
+//    }
+//    next();
+//} );
 
-var wss = new ws.Server( { server: server, path: "/api" } );
-wss.on( "connection", function( socket ) {
-    api.subscribe( socket );
-    socket.on( "close", api.unsubscribe.bind( api, socket ) );
-} );
+//server.listen( app.get( "port" ), function() {
+//    console.log( "server is running at :" + app.get( "port" ) );
+//} );
+
+//var wss = new ws.Server( { server: server, path: "/api" } );
+//wss.on( "connection", function( socket ) {
+//    api.subscribe( socket );
+//    socket.on( "close", api.unsubscribe.bind( api, socket ) );
+//} );
 
 
 //app.listen( app.get( 'port' ), function() {

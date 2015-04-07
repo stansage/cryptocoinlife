@@ -3,11 +3,11 @@ require( [
         "//cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js",
         "//ajax.googleapis.com/ajax/libs/threejs/r69/three.min.js"
     ], function() {
-        var view = new View();
-        var controller = new Controller();
         var model = new Model( window.location.origin.replace( /^http/, "ws" ) + "/api" );
+        var view = new View( window.innerWidth, window.innerHeight );
+        var controller = new Controller( model, view );
 
-        controller.attach( model, view );
+        controller.attach( document.body );
     }
 );
 

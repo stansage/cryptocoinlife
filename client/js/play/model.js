@@ -7,22 +7,24 @@ function Model( host ) {
             callback( JSON.parse( message.data ) );
         }
     }
-    this.onConnect = function( params ) {
-        this.socket.send( params );
-    };
 }
 
 Model.prototype.subscribe = function( callback ) {
-    this.socket.onmessage = this.onMessage.bind( this, callback );
+    this.socket.onmessage = this.onMessage.bind( callback );
 };
 
 Model.prototype.unsubscribe = function() {
     this.socket.close();
 };
 
-Model.prototype.load = function( layout ) {
-    this.socket.onopen = this.onConnect.bind( this, JSON.stringify( layout ) );
+Model.prototype.load = function( config ) {
+    this.socket.onopen = this.onConnect.bind( this, JSON.stringify( config ) );
 };
+
+Model.prototype.onConnect = function( config ) {
+    this.socket.send( config );
+};
+
 
 // var api = function() {
 

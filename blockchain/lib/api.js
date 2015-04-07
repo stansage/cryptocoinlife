@@ -11,53 +11,9 @@ var ResponseType = {
   TRANSACTION: {}
 };
 
-function Api( provider ) {
+function Api( bitcoin ) {
     this.sessions = [];
-    this.rpc = new Rpc( provider );
-    this.findSession = function( socket ) {
-        for ( var i = 0; i < this.sessions.length; ++ i ) {
-            var session = this.sessions[ i ];
-            if ( this.sessions[ i ].hasClient( socket ) ) {
-                return i;
-            }
-        }
-        return -1;
-    };
-    this.onResponse = function( session, type, response ) {
-        if ( ! session.isActive() ) {
-            return;
-        }
-
-        switch ( type ) {
-        case ResponseType.TRANSACTION:
-            session.addTransaction( response );
-            break;
-        case ResponseType.BLOCK:
-            for ( var i = 0; i < response.tx.length; ++ i ) {
-                this.rpc.getTransaction( response.tx[ i ], this.onResponse.bind( this, session, ResponseType.TRANSACTION ) );
-            }
-            if ( response.nextblockhash ) {
-                this.rpc.getBlock( response.nextblockhash, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
-            } else {
-                console.warn( "All blocks exhausted", response );
-            }
-
-            break;
-        default:
-            console.warn( "Invalid response type:", type );
-            break;
-        }
-    };
-    this.onRequest = function( socket, event ) {
-        console.log( "Api:onRequest:event.data:", event.data );
-
-        var session = this.findSession( socket );
-        if ( session === -1 ) {
-            throw "Unknown session";
-        }
-        this.sessions[ session ].setLayout( JSON.parse( event.data ) );
-        this.rpc.getBlock( 0, this.onResponse.bind( this, this.sessions[ session ], ResponseType.BLOCK ) );
-    }
+    this.rpc = new Rpc( bitcoin );
 }
 
 Api.prototype.subscribe = function( socket ) {
@@ -68,12 +24,66 @@ Api.prototype.subscribe = function( socket ) {
 };
 
 Api.prototype.unsubscribe = function( socket ) {
-    var session = this.findSession( socket );
-    if ( session !== -1 ) {
-        this.sessions[ session ].setActive( false );
+    var index = this.findSession( socket );
+    if ( index !== -1 ) {
+        this.sessions[ session ].close( undefined );
         this.sessions.splice( session, 1 );
     }
 };
+
+Api.prototype.findSession = function( socket ) {
+    for ( var i = 0; i < this.sessions.length; ++ i ) {
+        var session = this.sessions[ i ];
+        if ( this.sessions[ i ].hasClient( socket ) ) {
+            return i;
+        }
+    }
+    return -1;
+};
+
+Api.prototype.onResponse = function( session, type, response ) {
+    if ( ! session.isActive() ) {
+        return;
+    }
+
+    switch ( type ) {
+    case ResponseType.TRANSACTION:
+        session.add( response );
+        break;
+    case ResponseType.BLOCK:
+        for ( var i = 0; i < response.tx.length; ++ i ) {
+            this.rpc.getTransaction( response.tx[ i ], this.onResponse.bind( this, session, ResponseType.TRANSACTION ) );
+        }
+        if ( response.nextblockhash ) {
+            this.rpc.getBlock( response.nextblockhash, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
+        } else {
+            console.warn( "Ap:onRespose: All blocks exhausted", response );
+        }
+
+        break;
+    default:
+        console.warn( "Ap:onRespose: Invalid response type:", type );
+        break;
+    }
+};
+
+Api.prototype.onRequest = function( socket, event ) {
+    console.log( "Api:onRequest:event.data:", event.data );
+
+    var index = this.findSession( socket );
+    if ( index === -1 ) {
+        throw "Ap:onRequest: Unknown session";
+    }
+    var session = this.sessions[ index ];
+    var argument = JSON.parse( event.data );
+
+    if ( session.isActive() ) {
+        session.stop( argument );
+    } else {
+        session.start( argument );
+        this.rpc.getBlock( 0, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
+    }
+}
 
 module.exports = {
     createApi: function( provider ) {

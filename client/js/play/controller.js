@@ -1,18 +1,77 @@
-function Controller() {
+function Controller( model, view ) {
+    this.model = model;
+    this.view = view;
+    this.mouseX = 0;
+    this.mouseY = 0;
+    this.halfX = window.innerWidth / 2;
+    this.halfY = window.innerHeight / 2;
 }
 
-Controller.prototype.attach = function( model, view ) {
-    document.onmousemove = view.onDocumentMouseMove.bind( view );
-    document.ontouchstart = view.onDocumentTouchStart.bind( view );
-    document.ontouchmove = view.onDocumentTouchMove.bind( view );
+Controller.prototype.attach = function( dom ) {
+    this.view.getDomElements().forEach( dom.appendChild, dom );
 
-    window.onclick = view.triggerAnimation.bind( view );
-    window.onresize = view.onWindowResize.bind( view );
-    window.onbeforeunload = model.unsubscribe.bind( model );
+    document.addEventListener( "mousemove", this.onMouseMove.bind( this ), false );
+    document.addEventListener( "touchstart", this.onTouchStart.bind( this ), false );
+    document.addEventListener( "touchmove", this.onTouchMove.bind( this ), false );
 
-    model.subscribe( view.onUpdate.bind( view ) );
-    model.load( view.getLayout() );
-    view.triggerAnimation();
+//    window.addEventListener( "click", view.triggerAnimation.bind( view ) );
+    window.addEventListener( "resize", this.onResize.bind( this ), false );
+    window.addEventListener( "beforeunload", this.model.unsubscribe.bind( this.model ), false );
+
+    // FF doesn't recognize mousewheel as of FF3.x
+    var mousewheelevt = ( /Firefox/i.test(navigator.userAgent) )? "DOMMouseScroll" : "mousewheel"
+    if ( document.attachEvent ) {
+        // if IE (and Opera depending on user setting)
+        document.attachEvent( "on" + mousewheelevt, this.onMouseWheel.bind( this ) );
+    } else {
+        // WC3 browsers
+        document.addEventListener( mousewheelevt, this.onMouseWheel.bind( this ), false );
+    }
+
+    this.model.subscribe( this.view.onUpdate.bind( this.view ) );
+    this.model.load( this.view.getLayout() );
+    this.view.animate();
+};
+
+Controller.prototype.onResize = function() {
+    this.halfX = window.innerWidth / 2;
+    this.halfY = window.innerHeight / 2;
+
+    this.view.resize( window.innerWidth, window.innerHeight );
+};
+
+Controller.prototype.onMouseWheel = function( event ) {
+    // equalize event object
+    event = window.event || event;
+    // check for detail first so Opera uses that instead of wheelDelta
+    var delta = event.detail ? event.detail * ( -120 ) : event.wheelDelta;
+    // delta returns +120 when wheel is scrolled up, -120 when down
+    console.log( "Conreoller:onMouseWheel:", delta );
+};
+
+Controller.prototype.onMouseMove = function( event ) {
+//    console.log( "Conreoller:onMouseMove:", this.halfX );
+
+    this.mouseX = event.clientX - this.halfX;
+    this.mouseY = event.clientY - this.halfY;
+};
+
+Controller.prototype.onTouchStart = function( event ) {
+    if ( event.touches.length > 1 ) {
+        event.preventDefault();
+
+        this.mouseX = event.touches[ 0 ].pageX - this.halfX;
+        this.mouseY = event.touches[ 0 ].pageY - this.halfY;
+    }
+};
+
+Controller.prototype.onTouchMove = function( event ) {
+    if ( event.touches.length == 1 ) {
+        event.preventDefault();
+
+        this.mouseX = event.touches[ 0 ].pageX - this.halfX;
+        this.mouseY = event.touches[ 0 ].pageY - this.halfY;
+    }
 };
 
 //( function( exports ) {
