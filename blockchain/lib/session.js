@@ -7,8 +7,9 @@
 var Algebra = require( "./algebra" );
 
 function Session( client ) {
-    this.LIMIT = 21000000.0;
-    this.source = this.LIMIT;
+    this.SOURCE_LIMIT = 21000000.0;
+    this.SOURCE_BOUND = Algebra.sphereRadius( this.SOURCE_LIMIT );
+    this.source = this.SOURCE_LIMIT;
     this.client = client;
     this.config = {};
     this.time = Date.now();
@@ -69,10 +70,13 @@ Session.prototype.onTransaction = function( transaction ) {
 //        }
 //    }
 
+    var particles = [];
     for ( var i = 0; i < transaction.vin.length; ++ i ) {
         if ( 'coinbase' in transaction.vin[ i ] ) {
             for ( var j = 0; j < transaction.vout.length; ++ j ) {
                 var volume = transaction.vout[ j ].value;
+//                for ( var addresses = transaction.vout[ j ].address;
+                particles.push( { position: [ 0, 0, 0 ], velocity: [ 0, 1, 0 ] } );
                 this.source -= volume;
             }
             if ( transaction.vin.length > 1 ) {
@@ -86,7 +90,8 @@ Session.prototype.onTransaction = function( transaction ) {
 //    var packet = { source: this.source };
     var packet = {
         radius: Algebra.sphereRadius( this.source ),
-        scale: this.source / this.LIMIT
+        scale: this.source / this.SOURCE_LIMIT,
+        particles: particles
     };
     this.client.send( JSON.stringify( packet ) );
 }

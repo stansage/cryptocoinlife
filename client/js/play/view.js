@@ -17,6 +17,15 @@ function View( width, height ) {
     this.stats.domElement.style.right = "0px";
 
     this.camera.position.z = 500;
+
+    var sphere = new THREE.SphereGeometry( model.source.radius, model.source.quality, model.source.quality );
+    var materical = new THREE.MeshBasicMaterial( { color: model.source.color } );
+    var source = new THREE.Mesh( sphere, mesh );
+    this.scene.add( source );
+
+    var material = new THREE.ParticleBasicMaterial( { color: 0xFFFFFF, size: 1 } );
+    var particles = new THREE.ParticleSystem( new THREE.Geometry(), material );
+    this.scene.add( particles );
 };
 
 View.prototype.getDomElements = function() {
@@ -30,43 +39,25 @@ View.prototype.resize = function( width, height ) {
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
 
+    
     this.renderer.setSize( this.width, this.height );
 };
 
 View.prototype.animate = function( model ) {
     this.stats.begin();
 
-    if ( model.source ) {
-        if ( this.scene.children.length === 0 ) {
-            var geometry = new THREE.SphereGeometry( model.source.radius, model.source.quality, model.source.quality );
-            var material = new THREE.MeshBasicMaterial( { color: model.source.color } );
-            var mesh = new THREE.Mesh( geometry, material );
-            this.scene.add( mesh );
-        } else if ( Math.abs( model.source.radius - this.scene.children[ 0 ].geometry.boundingSphere.radius ) > 1 ) {
-            this.scene.children[ 0 ].geometry = new THREE.SphereGeometry( model.source.radius, model.source.quality, model.source.quality );
-        }
+    var 
+    if ( Math.abs( model.source.radius - source.geometry.boundingSphere.radius ) > 1 ) {
+        source.geometry = new THREE.SphereGeometry( model.source.radius, model.source.quality, model.source.quality );
     }
 
-//    for ( var i = 0; i < model.length; ++ i ) {
+    while ( model.particles.length !== 0 ) {
+        var particle = model.particles.pop();
+        var vertex = new THREE.Vertex( new THREE.Vector3( particle.position[ 0 ], particle.position[ 1 ], particle.position[ 2 ] ) );
+        particle.velocity = new THREE.Vector3( particle.velocity[ 0 ], particle.velocity[ 1 ], particle.velocity[ 2 ] );
+        particles.geometry.vertices.push( vertex );
+    }
 
-//        var geometry = new THREE.SphereGeometry( object.radius, object.quality, object.quality );
-//        var material = new THREE.MeshBasicMaterial( { color: object.color } );
-//        var mesh = new THREE.Mesh( geometry, material );
-
-//        if ( object.index !== -1 ) {
-//            this.scene.children[ object.index ] = mesh;
-//        } else {
-//            this.scene.add( mesh );
-//        }
-
-//        if ( object.position ) {
-//            assert( object.position.length === 3, "View:onUpdate - Invalid position " + object.position );
-
-//            mesh.position.x = parseInt( object.position[ 0 ] );
-//            mesh.position.y = parseInt( object.position[ 1 ] );
-//            mesh.position.z = parseInt( object.position[ 2 ] );
-//        }
-//    }
 
     this.renderer.render( this.scene, this.camera );
     this.stats.end();
