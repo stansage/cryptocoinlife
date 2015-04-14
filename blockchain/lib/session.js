@@ -70,14 +70,32 @@ Session.prototype.onTransaction = function( transaction ) {
 //        }
 //    }
 
+
     var particles = [];
+
     for ( var i = 0; i < transaction.vin.length; ++ i ) {
         if ( 'coinbase' in transaction.vin[ i ] ) {
             for ( var j = 0; j < transaction.vout.length; ++ j ) {
-                var volume = transaction.vout[ j ].value;
-//                for ( var addresses = transaction.vout[ j ].address;
-                particles.push( { position: [ 0, 0, 0 ], velocity: [ 0, 1, 0 ] } );
-                this.source -= volume;
+                var vout = transaction.vout[ j ];
+                var addresses = vout.scriptPubKey.addresses;
+
+                this.source -= vout.value;
+
+                if ( addresses.length > 1 ) {
+                    console.warn( "Session:add: Unsupported multiple addresses" );
+                } else {
+                    var buffer = new Buffer( addresses[ 0 ], 'base64' );
+                    var position = Algebra.makePosition( buffer, this.SOURCE_BOUND + 1 );
+//                    var position = [ Math.random() * -500, Math.random() * Math.PI, Math.random() * Math.PI ];
+//                    var velocity = position.slice();
+//                    ++ velocity[ 0 ];
+                    particles.push( {
+                        x: position[ 0 ],
+                        y: position[ 1 ],
+                        z: position[ 2 ],
+                        size: vout.value
+                    } );
+                }
             }
             if ( transaction.vin.length > 1 ) {
                 throw "Session:add: Invalid transaction" + JSON.stringify( transaction );
@@ -85,14 +103,12 @@ Session.prototype.onTransaction = function( transaction ) {
         }
     }
 
-
-    //console.log( this.items );
-//    var packet = { source: this.source };
     var packet = {
         radius: Algebra.sphereRadius( this.source ),
         scale: this.source / this.SOURCE_LIMIT,
         particles: particles
     };
+
     this.client.send( JSON.stringify( packet ) );
 }
 

@@ -4,6 +4,11 @@ block header
     title Crypto Coin Life - Play
 
 block content
+    script(id="vertexShader" type="x-shader/x-vertex")
+        include shaders/vertex.glsl
+    script(id="fragmentShader" type="x-shader/x-fragment")
+        include shaders/fragment.glsl
+
     script
         include js/play/model.js
     script

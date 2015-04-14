@@ -3,3 +3,6 @@ node_modules/ws/wscat/node_modules/ws/node_modules/nan
 .
 blockchain/lib
 client/js
+node_modules/crc
+node_modules/crc/lib
+client/shaders

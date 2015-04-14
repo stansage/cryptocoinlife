@@ -19,7 +19,7 @@ server.start();
     if ( ! server.isReady() ) {
         setTimeout( test, 1 );
     } else {
-        var wsc = new WebSocket( "ws://localhost:5000/api" );
+        var wsc = new WebSocket( "ws://localhost:5100/api" );
         wsc.on( "open", function() {
             wsc.send( JSON.stringify( { offset: 0, delay: 1000 } ) );
         });

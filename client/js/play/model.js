@@ -1,12 +1,11 @@
 function Model( host ) {
-    this.source = { radius : 0, quality: 0, color : 0 };
+    this.source = { radius: 0, quality: 0, color : 0 };
     this.particles = [];
     this.socket = new WebSocket( host );
-    this.socket.onmessage = this.onMessage.bind( this );
 }
 
 Model.prototype.load = function( config ) {
-    this.socket.onopen = this.onOpen.bind( this, JSON.stringify( config ) );
+    this.socket.onopen = this.onOpen.bind( this, config );
 };
 
 Model.prototype.unload = function() {
@@ -14,7 +13,8 @@ Model.prototype.unload = function() {
 }
 
 Model.prototype.onOpen = function( config ) {
-    this.socket.send( config );
+    this.socket.onmessage = this.onMessage.bind( this );
+    this.socket.send( JSON.stringify( config ) );
 };
 
 Model.prototype.onMessage = function( message ) {
@@ -22,7 +22,9 @@ Model.prototype.onMessage = function( message ) {
         console.warn( "Model: No data" );
     } else {
         var packet = JSON.parse( message.data );
-        packet.particles.forEach( this.particles.push.bind( this.particles ) );
+        for ( var i = 0; i < packet.particles.length; ++ i ) {
+            this.particles.push( packet.particles[ i ] );
+        }
 
         this.source.radius = packet.radius;
         this.source.quality = packet.radius / 2;
