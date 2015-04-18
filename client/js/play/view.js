@@ -14,7 +14,6 @@ function View( width, height ) {
         this.renderer.setPixelRatio( window.devicePixelRatio );
     }
 
-
     this.stats.domElement.style.position = "absolute";
     this.stats.domElement.style.bottom = "0px";
     this.stats.domElement.style.right = "0px";
@@ -29,7 +28,7 @@ function View( width, height ) {
 
 //    var pMaterial = new THREE.PointCloudMaterial( { color: 0xFF00FF, size: 10 } );
     var attributes = {
-        size: { type: 'f', value: null }
+//        size: { type: 'f', value: null }
 //        color: { type: 'c', value: null }
     };
     var uniforms = {
@@ -97,7 +96,7 @@ View.prototype.animate = function( model ) {
     while ( model.particles.length !== 0 ) {
         var particle = model.particles.pop();
 
-        console.log( particle );
+//        console.log( particle );
 
         size.array[ this.counter / 3 ] = particle.size;
 
@@ -105,7 +104,7 @@ View.prototype.animate = function( model ) {
         position.array[ this.counter++ ] = particle.y;
         position.array[ this.counter++ ] = particle.z;
 
-        if ( this.counter >= 6000 ) {
+        if ( this.counter >= position.array.length ) {
             this.counter = 0;
         }
     }

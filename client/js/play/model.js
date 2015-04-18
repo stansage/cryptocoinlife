@@ -29,6 +29,8 @@ Model.prototype.onMessage = function( message ) {
         this.source.radius = packet.radius;
         this.source.quality = packet.radius / 2;
         this.source.color = 0xff0000 + ( parseInt( packet.scale * 0xff ) << 8 );
+
+        this.socket.send( JSON.stringify( { block: packet.next } ) );
     }
 };
 // var api = function() {

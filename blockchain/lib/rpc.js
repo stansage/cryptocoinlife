@@ -9,7 +9,7 @@ function Rpc( client ) {
     this.makeResult = function( rpc, key, callback ) {
         return function( error, result, headers ) {
             if ( error ) {
-                return console.error( error, key );
+                console.error( "Rpc:makeResult:", error, key );
             }
             callback( rpc, result );
         };

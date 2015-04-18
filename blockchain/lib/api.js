@@ -6,10 +6,6 @@
 
 var Rpc = require( "./rpc" );
 var Session = require( "./session" );
-var ResponseType = {
-  BLOCK: {},
-  TRANSACTION: {}
-};
 
 function Api( bitcoin ) {
     this.sessions = [];
@@ -19,7 +15,7 @@ function Api( bitcoin ) {
 Api.prototype.subscribe = function( socket ) {
     socket.onmessage = this.onRequest.bind( this, socket );
 
-    var session = new Session( socket );
+    var session = new Session( socket, this.rpc );
     this.sessions.push( session );
 };
 
@@ -42,44 +38,6 @@ Api.prototype.find = function( socket ) {
 };
 
 
-Api.prototype.nextBlock = function( session, block ) {
-    var duration = session.whenReady();
-
-//    console.log( "Api:nextBlock:duration:", duration );
-
-    if ( duration !== 0 ) {
-        setTimeout( this.nextBlock.bind( this, session, block ), duration );
-    } else {
-        session.time = Date.now();
-        this.rpc.getBlock( block, this.onResponse.bind( this, session, ResponseType.BLOCK ) );
-    }
-}
-
-Api.prototype.onResponse = function( session, type, response ) {
-    if ( ! session.active()  ) {
-        return;
-    }
-
-    switch ( type ) {
-    case ResponseType.TRANSACTION:
-        session.onTransaction( response );
-        break;
-    case ResponseType.BLOCK:
-        for ( var i = 0; i < response.tx.length; ++ i ) {
-            this.rpc.getTransaction( response.tx[ i ], this.onResponse.bind( this, session, ResponseType.TRANSACTION ) );
-        }
-        if ( response.nextblockhash ) {
-            this.nextBlock( session, response.nextblockhash );
-        } else {
-            console.warn( "Api:onRespose: All blocks exhausted", response );
-        }
-
-        break;
-    default:
-        throw "Api:onRespose: Invalid response type " + type;
-    }
-};
-
 Api.prototype.onRequest = function( socket, event ) {
     var index = this.find( socket );
     if ( index === -1 ) {
@@ -95,10 +53,12 @@ Api.prototype.onRequest = function( socket, event ) {
     session.config = JSON.parse( event.data );
 
     if ( session.active() ) {
-        this.nextBlock( session, session.config.offset );
+        session.nextBlock();
     } else if ( active ) {
         console.info( "Api:onRequest: Closing session", index );
         socket.close();
+    } else {
+        console.warn( "Api:onRequest: Session still active", index );
     }
 }
 
