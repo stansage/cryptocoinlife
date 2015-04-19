@@ -1,5 +1,3 @@
-var CRC = require( "crc" );
-
 module.exports = {
     toSpherical: function( coordinates ) {
         var x2 = coordinates[ 0 ] * coordinates[ 0 ];

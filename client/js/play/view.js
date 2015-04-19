@@ -26,15 +26,15 @@ function View( width, height ) {
     this.scene.add( source );
 
 
-//    var pMaterial = new THREE.PointCloudMaterial( { color: 0xFF00FF, size: 10 } );
+    var bmp = [ 0xffcccccc, 0xffcccccc, 0xffcccccc, 0xffcccccc ];
     var attributes = {
-//        size: { type: 'f', value: null }
+        size: { type: 'f', value: null }
 //        color: { type: 'c', value: null }
     };
     var uniforms = {
-        viewport: { type: "v4", value: new THREE.Vector4( 0, 0, this.width, this.height )  }
-//        color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-//        texture:   { type: "t", value: THREE.ImageUtils.loadTexture( "textures/sprites/spark1.png" ) }
+//        viewport: { type: "v4", value: new THREE.Vector4( 0, 0, this.width, this.height )  }
+        color:     { type: "c", value: new THREE.Color( 0xffff00 ) },
+        texture:   { type: "t", value: new THREE.DataTexture( bmp, 2, 2 ) }
     };
     var shader = new THREE.ShaderMaterial( {
         uniforms: uniforms,
@@ -46,11 +46,15 @@ function View( width, height ) {
         depthTest: false,
         transparent: true
     } );
+
+//    var pMaterial = new THREE.PointCloudMaterial( { color: 0xFF00FF, size: 10 } );
     var geometry = new THREE.BufferGeometry();
     var positions = new Float32Array( 9000 );
     var sizes = new Float32Array( positions.length / 3 );
+
     geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
     geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes ) );
+
     var particles = new THREE.PointCloud( geometry, shader );
     this.scene.add( particles );
 
