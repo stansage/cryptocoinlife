@@ -42,12 +42,12 @@ Controller.prototype.onMouseWheel = function( event ) {
     // check for detail first so Opera uses that instead of wheelDelta
     var delta = event.detail ? event.detail * ( -120 ) : event.wheelDelta;
     // delta returns +120 when wheel is scrolled up, -120 when down
-    console.log( "Conreoller:onMouseWheel:", delta );
+    console.log( "Contreoller:onMouseWheel:", delta );
+    this.view.look( delta );
 };
 
 Controller.prototype.onMouseMove = function( event ) {
 //    console.log( "Conreoller:onMouseMove:", this.halfX );
-
     this.mouseX = event.clientX - this.halfX;
     this.mouseY = event.clientY - this.halfY;
 };
@@ -67,6 +67,9 @@ Controller.prototype.onTouchMove = function( event ) {
 
         this.mouseX = event.touches[ 0 ].pageX - this.halfX;
         this.mouseY = event.touches[ 0 ].pageY - this.halfY;
+
+//        this.view.scene.position.x += this.mouseX / 100;
+//        this.view.scene.position.y += this.mouseY / 100;
     }
 };
 

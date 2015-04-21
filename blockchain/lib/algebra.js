@@ -1,5 +1,5 @@
 module.exports = {
-    toSpherical: function( coordinates ) {
+    toSpherical : function( coordinates ) {
         var x2 = coordinates[ 0 ] * coordinates[ 0 ];
         var y2 = coordinates[ 1 ] * coordinates[ 1 ];
         var z2 = coordinates[ 2 ] * coordinates[ 2 ];
@@ -12,8 +12,8 @@ module.exports = {
         ];
     },
 
-    fromSpherical: function( coordinates ) {
-//        console.log( "Algebra:fromSpheric: ", r, z , a,  r * Math.sin( z ) * Math.cos( a ), r * Math.sin( z ) * Math.sin( a ), r * Math.cos( z ) );
+    fromSpherical : function( coordinates ) {
+//        console.log( "Algebra:fromSpheric: ", coordinates );
         return [
             coordinates[ 0 ] * Math.sin( coordinates[ 1 ] ) * Math.cos( coordinates[ 2 ] ),
             coordinates[ 0 ] * Math.sin( coordinates[ 1 ] ) * Math.sin( coordinates[ 2 ] ),
@@ -24,5 +24,10 @@ module.exports = {
     sphereRadius : function( volume ) {
         var x = Math.PI * 4.0 / 3.0;
         return Math.pow( volume / x , 1 / 3 );
+    },
+
+    cubeSize : function( volume ) {
+        return Math.pow( volume , 1 / 3 );
     }
+
 };

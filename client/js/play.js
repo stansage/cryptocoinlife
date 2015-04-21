@@ -10,7 +10,7 @@ require( [
         var view = new View( window.innerWidth, window.innerHeight );
         var controller = new Controller( model, view );
 
-        model.load( { block: 1 } );
+        model.load( { block: 0 } );
         controller.attach( document.body );
         view.animate( model );
     }

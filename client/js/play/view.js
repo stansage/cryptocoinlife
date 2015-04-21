@@ -1,3 +1,12 @@
+var ParticleCount = 3000;
+var ParticleVelocity = 0.1
+var Coin = {
+    color : 0xffff00,
+    bmp : [ 0x77cccccc, 0x77cccccc, 0x77cccccc, 0x77cccccc ],
+    width : 2,
+    height : 2
+};
+
 function View( width, height ) {
     this.width = width;
     this.height = height;
@@ -26,39 +35,59 @@ function View( width, height ) {
     this.scene.add( source );
 
 
-    var bmp = [ 0xffcccccc, 0xffcccccc, 0xffcccccc, 0xffcccccc ];
     var attributes = {
-        size: { type: 'f', value: null }
+        size : {
+            type : 'f',
+            value : null
+        }
 //        color: { type: 'c', value: null }
     };
     var uniforms = {
 //        viewport: { type: "v4", value: new THREE.Vector4( 0, 0, this.width, this.height )  }
-        color:     { type: "c", value: new THREE.Color( 0xffff00 ) },
-        texture:   { type: "t", value: new THREE.DataTexture( bmp, 2, 2 ) }
+        color : {
+            type : "c",
+            value : new THREE.Color( Coin.color )
+        }
+//        texture : {
+//            type : "t",
+//            value : new THREE.DataTexture( Coin.bmp, Coin.width, Coin.height )
+//        }
     };
     var shader = new THREE.ShaderMaterial( {
-        uniforms: uniforms,
-        attributes: attributes,
-        vertexShader: document.getElementById( "vertexShader" ).textContent,
-        fragmentShader: document.getElementById( "fragmentShader" ).textContent,
+        uniforms : uniforms,
+        attributes : attributes,
+        vertexShader : document.getElementById( "vertexShader" ).textContent,
+        fragmentShader : document.getElementById( "fragmentShader" ).textContent,
 
-        blending: THREE.AdditiveBlending,
-        depthTest: false,
-        transparent: true
+        blending : THREE.AdditiveBlending,
+        depthTest : false,
+        transparent : true
     } );
 
 //    var pMaterial = new THREE.PointCloudMaterial( { color: 0xFF00FF, size: 10 } );
     var geometry = new THREE.BufferGeometry();
-    var positions = new Float32Array( 9000 );
-    var sizes = new Float32Array( positions.length / 3 );
+    var positions = new Float32Array( ParticleCount * 3 );
+    var sizes = new Float32Array( ParticleCount );
 
     geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-    geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes ) );
+    geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
 
     var particles = new THREE.PointCloud( geometry, shader );
     this.scene.add( particles );
 
     this.counter = 0;
+    this.velocities = new Array( ParticleCount );
+    this.move = function( first, last, positions, velocities ) {
+        for ( var i = first; i < last; ) {
+            var velocity = velocities[ i / 3 ];
+            if ( ! velocity ) {
+                break;
+            }
+            for ( var j = 0; j < 3; ++ j, ++ i ) {
+                positions[ i ] += velocity[ j ];
+            }
+        }
+    }
 };
 
 View.prototype.getDomElements = function() {
@@ -75,6 +104,13 @@ View.prototype.resize = function( width, height ) {
 
     this.renderer.setSize( this.width, this.height );
 };
+
+View.prototype.look = function( degrees ) {
+    var z = this.camera.position.z - degrees / 120;
+    if ( ( z > 200 ) && ( z < 1000 ) ) {
+        this.camera.position.z = z;
+    }
+}
 
 View.prototype.animate = function( model ) {
     this.stats.begin();
@@ -97,23 +133,28 @@ View.prototype.animate = function( model ) {
     position.needsUpdate = model.particles.length !== 0;
     size.needsUpdate = model.particles.length !== 0;
 
+    this.move( 0, this.counter, position.array, this.velocities );
+
     while ( model.particles.length !== 0 ) {
         var particle = model.particles.pop();
-
+        var current = this.counter / 3;
 //        console.log( particle );
 
-        size.array[ this.counter / 3 ] = particle.size;
+        this.velocities[ current ] = particle.velocity;
+        size.array[ current ] = particle.size;
 
-        position.array[ this.counter++ ] = particle.x;
-        position.array[ this.counter++ ] = particle.y;
-        position.array[ this.counter++ ] = particle.z;
+        for ( var i = 0; i < particle.position.length; ++ i ) {
+            position.array[ this.counter ++ ] = particle.position[ i ];
+        }
 
         if ( this.counter >= position.array.length ) {
             this.counter = 0;
         }
     }
 
+    this.move( this.counter, position.length, position.array, this.velocities );
 
+//    this.camera.lookAt( this.scene.position );
     this.renderer.render( this.scene, this.camera );
 
     this.stats.end();

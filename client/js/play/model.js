@@ -23,6 +23,7 @@ Model.prototype.onMessage = function( message ) {
     } else {
         var packet = JSON.parse( message.data );
         for ( var i = 0; i < packet.particles.length; ++ i ) {
+//            console.log( "Model:onMessage:", packet.particles[ i ] );
             this.particles.push( packet.particles[ i ] );
         }
 
@@ -30,7 +31,9 @@ Model.prototype.onMessage = function( message ) {
         this.source.quality = packet.radius / 2;
         this.source.color = 0xff0000 + ( parseInt( packet.scale * 0xff ) << 8 );
 
-        this.socket.send( JSON.stringify( { block: packet.next } ) );
+        if ( !! packet.next ) {
+            this.socket.send( JSON.stringify( { block: packet.next } ) );
+        }
     }
 };
 // var api = function() {
