@@ -106,7 +106,7 @@ View.prototype.resize = function( width, height ) {
 };
 
 View.prototype.look = function( degrees ) {
-    var z = this.camera.position.z - degrees / 120;
+    var z = this.camera.position.z - degrees / 15;
     if ( ( z > 200 ) && ( z < 1000 ) ) {
         this.camera.position.z = z;
     }
@@ -125,7 +125,6 @@ View.prototype.animate = function( model ) {
     if ( Math.abs( model.source.color - source.material.color.getHex() ) > 1 ) {
         source.material.color = new THREE.Color( model.source.color );
     }
-
 
     var size = particles.geometry.attributes.size;
     var position = particles.geometry.attributes.position;

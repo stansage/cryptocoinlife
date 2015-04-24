@@ -5,12 +5,17 @@
  */
 
 var Algebra = require( "./algebra" );
+var Speed = 10;
 var ParticleVelocity = 0.5;
-var SourceLimit = 21000000.0;
-var DayTime = 24 * 60 * 60;
-var DoubleDayTime = 2 * DayTime;
-var DoublePi = 2 * Math.PI;
-var SourceBound = Algebra.sphereRadius( SourceLimit );
+var BitcoinTotal = 21000000.0;
+var Source = {
+    limit : BitcoinTotal,
+    bound : Algebra.sphereRadius( BitcoinTotal )
+};
+var Day = {
+    half : 12 * 60 * 60,
+    full : 24 * 60 * 60
+};
 var GenesisTransaction = {
     txid : "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
     version : 1,
@@ -45,144 +50,99 @@ var GenesisTransaction = {
 
 function Session( client, rpc ) {
     this.rpc = rpc;
-    this.source = SourceLimit;
+    this.source = Source.limit;
     this.client = client;
-    this.config = {};
-    this.time = Date.now();
+    this.block = 0;
     this.packet = {
-        next: null,
-        radius: 0,
-        scale: 0,
-        particles: []
+        time : GenesisTransaction.blocktime,
+        radius : 0,
+        scale : 0,
+        particles : []
     };
 }
 
-Session.prototype.active = function() {
-    return ( !! this.client )
-        && ( this.rpc )
-        && ( Object.keys( this.config ).length !== 0 )
-        && ( 'block' in this.config );
-};
-
-//Session.prototype.whenReady = function() {
-//    var timeout = Math.max( 1, this.config.delay || 1000 );
-//    var elapsed = Date.now() - this.time;
-//    return elapsed < timeout ? timeout - elapsed : 0;
-//};
-
 Session.prototype.nextBlock = function() {
-    if ( ! this.active()  ) {
-        return;
-    }
-    if ( this.config.block === 0 ) {
-        this.onTransaction( { next : 1 }, GenesisTransaction );
+    if ( this.block === 0 ) {
+        this.block = 1;
+        this.onTransaction.call( this, GenesisTransaction.blocktime, GenesisTransaction );
     } else {
-        this.rpc.getBlock( this.config.block, this.onBlock.bind( this ) );
+        this.rpc.getBlock( this.block, this.onBlock.bind( this ) );
     }
-//    var duration = session.whenReady();
-
-//    console.log( "Api:nextBlock:duration:", duration );
-//    if ( duration !== 0 ) {
-//        setTimeout( this.nextBlock.bind( this ), duration );
-//    } else {
-//        this.time = Date.now();
-//    }
 };
 
-//Session.prototype.onResponse = function( type, response ) {
-//    if ( ! this.active()  ) {
-//        return;
-//    }
+Session.prototype.commit = function() {
+    this.packet.radius = Algebra.sphereRadius( this.source );
+    this.packet.scale = this.source / Source.limit;
 
-//    switch ( type ) {
-//    case ResponseType.TRANSACTION:
-//        this.onTransaction( response );
-//        break;
-//    case ResponseType.BLOCK:
-//        this.onBlock( response );
-////        if ( response.nextblockhash ) {
-////            this.nextBlock( session, response.nextblockhash );
-////        } else {
-////            console.warn( "Api:onRespose: All blocks exhausted", response );
-////        }
+    this.client.send( JSON.stringify( this.packet ) );
+    this.packet.particles = [];
+    this.nextBlock();
+};
 
-//        break;
-//    default:
-//        throw "Api:onRespose: Invalid response type " + type;
-//    }
-//};
+
 
 Session.prototype.onBlock = function( block ) {
-    if ( ! this.active() ) {
+    if ( ! block ) {
         return;
     }
 
-    if ( !! block ) {
-        for ( var i = 0; i < block.tx.length; ++ i ) {
-            var commit = ( i == block.tx.length - 1 ) ? { next : block.nextblockhash } : null;
-            this.rpc.getTransaction( block.tx[ i ], this.onTransaction.bind( this, commit ) );
+    for ( var i = 0; i < block.tx.length; ++ i ) {
+        var last = i === block.tx.length - 1 ? block.time : 0;
+        this.rpc.getTransaction( block.tx[ i ], this.onTransaction.bind( this, last ) );
+    }
+
+    this.block = block.nextblockhash;
+};
+
+Session.prototype.onTransaction = function( last, transaction ) {
+    if ( !! transaction ) {
+        for ( var i = 0; i < transaction.vin.length; ++ i ) {
+            if ( 'coinbase' in transaction.vin[ i ] ) {
+                if ( transaction.vin.length > 1 ) {
+                    throw "Session:add: Invalid transaction" + JSON.stringify( transaction );
+                }
+
+                for ( var j = 0; j < transaction.vout.length; ++ j ) {
+                    var vout = transaction.vout[ j ];
+                    var radius = transaction.time % Day.full > Day.half ? Source.bound : -Source.bound;
+                    var angle = 2.0 * Math.PI * ( transaction.time % Day.half ) / Day.half;
+                    var coordinates = [ radius ].concat( [ angle, angle ] );
+
+                    var position = Algebra.fromSpherical( coordinates );
+                    if ( radius > 0 ) {
+                        coordinates[ 0 ] += ParticleVelocity;
+                    } else {
+                        coordinates[ 0 ] -= ParticleVelocity;
+                    }
+                    var velocity = Algebra.fromSpherical( coordinates );
+
+                    velocity[ 0 ] -= position[ 0 ];
+                    velocity[ 1 ] -= position[ 1 ];
+                    velocity[ 2 ] -= position[ 2 ];
+
+
+                    this.source -= vout.value;
+                    this.packet.particles.push( {
+                        position : position,
+                        velocity : velocity,
+                        size : Algebra.cubeSize( vout.value )
+                    } );
+                }
+            }
+        }
+    }
+
+    if ( last ) {
+        var duration = Math.min( last - this.packet.time, 1000 );
+        console.log( "Session:onTransaction:", last, this.packet.time, parseInt( duration ) );
+        if ( duration > 0 )  {
+            this.packet.time = last;
+            setTimeout( this.commit.bind( this ), duration );
+        } else {
+            this.commit();
         }
     }
 };
-
-Session.prototype.onTransaction = function( commit, transaction ) {
-    if ( ! this.active() ) {
-        return;
-    }
-    if ( ! transaction ) {
-        console.warn( "Session:onTransaction:", commit, time );
-        return;
-    }
-
-    for ( var i = 0; i < transaction.vin.length; ++ i ) {
-        if ( 'coinbase' in transaction.vin[ i ] ) {
-            if ( transaction.vin.length > 1 ) {
-                throw "Session:add: Invalid transaction" + JSON.stringify( transaction );
-            }
-
-            for ( var j = 0; j < transaction.vout.length; ++ j ) {
-                var vout = transaction.vout[ j ];
-//                var addresses = vout.scriptPubKey.addresses;
-
-                this.source -= vout.value;
-
-                var angle = DoublePi * ( transaction.time % DayTime ) / DayTime;
-                var radius = transaction.time % DoubleDayTime > DayTime ? SourceBound : -SourceBound;
-                var coordinates = [ radius ].concat( [ angle, DoublePi - angle ] );
-
-//                var angle = 2.0 * Math.PI * daytime / DayTime;
-//                var position = Algebra.fromSpherical( [ radius ].concat( [ angle, angle ] ) );
-                var position = Algebra.fromSpherical( coordinates );
-                if ( radius > 0 ) {
-                    coordinates[ 0 ] += ParticleVelocity;
-                } else {
-                    coordinates[ 0 ] -= ParticleVelocity;
-                }
-                var velocity = Algebra.fromSpherical( coordinates );
-
-                velocity[ 0 ] -= position[ 0 ];
-                velocity[ 1 ] -= position[ 1 ];
-                velocity[ 2 ] -= position[ 2 ];
-
-                console.log( "Session:onTransaction:", angle, coordinates, position, velocity );
-
-                this.packet.particles.push( {
-                    position : position,
-                    velocity: velocity,
-                    size : Algebra.cubeSize( vout.value )
-                } );
-            }
-        }
-    }
-
-    if ( !! commit ) {
-        this.packet.next = commit.next;
-        this.packet.radius = Algebra.sphereRadius( this.source );
-        this.packet.scale = this.source / SourceLimit;
-        this.client.send( JSON.stringify( this.packet ) );
-        this.packet.particles = [];
-    }
-}
 
 module.exports = Session;
 

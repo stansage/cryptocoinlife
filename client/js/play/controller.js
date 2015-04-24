@@ -8,6 +8,7 @@ function Controller( model, view ) {
 }
 
 Controller.prototype.attach = function( dom ) {
+    this.model.socket.onmessage = this.model.onMessage.bind( this.model );
     this.view.getDomElements().forEach( dom.appendChild, dom );
 
     document.addEventListener( "mousemove", this.onMouseMove.bind( this ), false );
@@ -16,18 +17,24 @@ Controller.prototype.attach = function( dom ) {
 
 //    window.addEventListener( "click", view.triggerAnimation.bind( view ) );
     window.addEventListener( "resize", this.onResize.bind( this ), false );
-    window.addEventListener( "beforeunload", this.model.unload.bind( this.model ), false );
+    window.addEventListener( "beforeunload", this.onUnload.bind( this ), false );
 
     // FF doesn't recognize mousewheel as of FF3.x
-    var mousewheelevt = ( /Firefox/i.test(navigator.userAgent) )? "DOMMouseScroll" : "mousewheel"
+    var mousewheelevt = ( /Firefox/i.test( navigator.userAgent ) )? "DOMMouseScroll" : "mousewheel"
     if ( document.attachEvent ) {
         // if IE (and Opera depending on user setting)
         document.attachEvent( "on" + mousewheelevt, this.onMouseWheel.bind( this ) );
+        //document.attachEvent( "onkeypress", this.onKeyPress.bind( this ) );
     } else {
         // WC3 browsers
         document.addEventListener( mousewheelevt, this.onMouseWheel.bind( this ), false );
+        //document.addEventListener( "keypress", this.onKeyPress.bind( this ), false );
     }
 };
+
+Controller.prototype.onUnload = function() {
+    this.model.socket.close();
+}
 
 Controller.prototype.onResize = function() {
     this.halfX = window.innerWidth / 2;
@@ -38,7 +45,7 @@ Controller.prototype.onResize = function() {
 
 Controller.prototype.onMouseWheel = function( event ) {
     // equalize event object
-    event = window.event || event;
+    event = event || window.event;
     // check for detail first so Opera uses that instead of wheelDelta
     var delta = event.detail ? event.detail * ( -120 ) : event.wheelDelta;
     // delta returns +120 when wheel is scrolled up, -120 when down
@@ -73,6 +80,25 @@ Controller.prototype.onTouchMove = function( event ) {
     }
 };
 
+Controller.prototype.onKeyPress = function( event ) {
+    console.log( event );
+//    event = event || window.event;
+
+//    switch ( event.key ) {
+//    case "a" :
+//        this.view.scene.position.x -= 1;
+//        break;
+//    case "d" :
+//        this.view.scene.position.x += 1;
+//        break;
+//    case "w" :
+//        this.view.scene.position.y += 1;
+//        break;
+//    case "s" :
+//        this.view.scene.position.y -= 1;
+//        break;
+//    }
+};
 //( function( exports ) {
 
 //    defineExport( exports, 'Controller', function() {

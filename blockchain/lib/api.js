@@ -13,16 +13,14 @@ function Api( bitcoin ) {
 }
 
 Api.prototype.subscribe = function( socket ) {
-    socket.onmessage = this.onRequest.bind( this, socket );
-
     var session = new Session( socket, this.rpc );
     this.sessions.push( session );
+    session.nextBlock();
 };
 
 Api.prototype.unsubscribe = function( socket ) {
     var index = this.find( socket );
     if ( index !== -1 ) {
-        this.sessions[ index ].client = null;
         this.sessions.splice( index, 1 );
     }
 };
@@ -36,31 +34,6 @@ Api.prototype.find = function( socket ) {
     }
     return -1;
 };
-
-
-Api.prototype.onRequest = function( socket, event ) {
-    var index = this.find( socket );
-    if ( index === -1 ) {
-        throw "Api:onRequest: Unknown session";
-    }
-
-    var session = this.sessions[ index ];
-    if ( ! session.client ) {
-        throw "Api:onRequest: Invalid session";
-    }
-
-    var active = session.active();
-    session.config = JSON.parse( event.data );
-
-    if ( session.active() ) {
-        session.nextBlock();
-    } else if ( active ) {
-        console.info( "Api:onRequest: Closing session", index );
-        socket.close();
-    } else {
-        console.warn( "Api:onRequest: Session still active", index );
-    }
-}
 
 
 module.exports = {

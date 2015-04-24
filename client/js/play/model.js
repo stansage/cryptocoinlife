@@ -4,23 +4,12 @@ function Model( host ) {
     this.socket = new WebSocket( host );
 }
 
-Model.prototype.load = function( config ) {
-    this.socket.onopen = this.onOpen.bind( this, config );
-};
-
-Model.prototype.unload = function() {
-    this.socket.close();
-}
-
-Model.prototype.onOpen = function( config ) {
-    this.socket.onmessage = this.onMessage.bind( this );
-    this.socket.send( JSON.stringify( config ) );
-};
-
 Model.prototype.onMessage = function( message ) {
     if ( ! message.data ) {
-        console.warn( "Model: No data" );
+        console.warn( "Model:onMessage: No data" );
     } else {
+        console.log( "Model:onMessage:", message.data );
+
         var packet = JSON.parse( message.data );
         for ( var i = 0; i < packet.particles.length; ++ i ) {
 //            console.log( "Model:onMessage:", packet.particles[ i ] );
@@ -30,10 +19,6 @@ Model.prototype.onMessage = function( message ) {
         this.source.radius = packet.radius;
         this.source.quality = packet.radius / 2;
         this.source.color = 0xff0000 + ( parseInt( packet.scale * 0xff ) << 8 );
-
-        if ( !! packet.next ) {
-            this.socket.send( JSON.stringify( { block: packet.next } ) );
-        }
     }
 };
 // var api = function() {
