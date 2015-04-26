@@ -8,14 +8,11 @@ var Algebra = require( "./algebra" );
 var Speed = 10;
 var ParticleVelocity = 0.5;
 var BitcoinTotal = 21000000.0;
-var Source = {
+var Volume = {
     limit : BitcoinTotal,
-    bound : Algebra.sphereRadius( BitcoinTotal )
+    bound : 1.5 * Algebra.sphereRadius( BitcoinTotal )
 };
-var Day = {
-    half : 12 * 60 * 60,
-    full : 24 * 60 * 60
-};
+var SecondsPerDay = 24 * 60 * 60;
 var GenesisTransaction = {
     txid : "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
     version : 1,
@@ -50,9 +47,10 @@ var GenesisTransaction = {
 
 function Session( client, rpc ) {
     this.rpc = rpc;
-    this.source = Source.limit;
     this.client = client;
     this.block = 0;
+    this.volume = 0;
+    this.counter = 0;
     this.packet = {
         time : GenesisTransaction.blocktime,
         radius : 0,
@@ -63,6 +61,8 @@ function Session( client, rpc ) {
 
 Session.prototype.nextBlock = function() {
     if ( this.block === 0 ) {
+        this.volume = Volume.limit;
+        this.counter = 0;
         this.block = 1;
         this.onTransaction.call( this, GenesisTransaction.blocktime, GenesisTransaction );
     } else {
@@ -71,8 +71,10 @@ Session.prototype.nextBlock = function() {
 };
 
 Session.prototype.commit = function() {
-    this.packet.radius = Algebra.sphereRadius( this.source );
-    this.packet.scale = this.source / Source.limit;
+    this.packet.source = {
+        radius : Algebra.sphereRadius( this.volume ),
+        scale : this.volume / Volume.limit
+    };
 
     this.client.send( JSON.stringify( this.packet ) );
     this.packet.particles = [];
@@ -97,35 +99,41 @@ Session.prototype.onBlock = function( block ) {
 Session.prototype.onTransaction = function( last, transaction ) {
     if ( !! transaction ) {
         for ( var i = 0; i < transaction.vin.length; ++ i ) {
-            if ( 'coinbase' in transaction.vin[ i ] ) {
+            var vin = transaction.vin[ i ];
+            if ( !! vin.coinbase ) {
                 if ( transaction.vin.length > 1 ) {
                     throw "Session:add: Invalid transaction" + JSON.stringify( transaction );
                 }
 
                 for ( var j = 0; j < transaction.vout.length; ++ j ) {
                     var vout = transaction.vout[ j ];
-                    var radius = transaction.time % Day.full > Day.half ? Source.bound : -Source.bound;
-                    var angle = 2.0 * Math.PI * ( transaction.time % Day.half ) / Day.half;
+                    var distance = ( transaction.time - GenesisTransaction.time ) / SecondsPerDay;
+                    var half = 2 * Math.PI * distance * distance;
+                    var full = 2 * half;
+                    var radius = transaction.time % full > half ? distance + Volume.bound : -distance - Volume.bound;
+                    var angle = 2.0 * Math.PI * ( transaction.time % half ) / half;
                     var coordinates = [ radius ].concat( [ angle, angle ] );
 
-                    var position = Algebra.fromSpherical( coordinates );
-                    if ( radius > 0 ) {
-                        coordinates[ 0 ] += ParticleVelocity;
-                    } else {
-                        coordinates[ 0 ] -= ParticleVelocity;
-                    }
-                    var velocity = Algebra.fromSpherical( coordinates );
+                    console.log( "Session:onTransaction:", distance, radius, half, coordinates );
 
-                    velocity[ 0 ] -= position[ 0 ];
-                    velocity[ 1 ] -= position[ 1 ];
-                    velocity[ 2 ] -= position[ 2 ];
+//                    var position = Algebra.fromSpherical( coordinates );
+//                    if ( radius > 0 ) {
+//                        coordinates[ 0 ] += ParticleVelocity;
+//                    } else {
+//                        coordinates[ 0 ] -= ParticleVelocity;
+//                    }
+//                    var velocity = Algebra.fromSpherical( coordinates );
+
+//                    velocity[ 0 ] -= position[ 0 ];
+//                    velocity[ 1 ] -= position[ 1 ];
+//                    velocity[ 2 ] -= position[ 2 ];
 
 
-                    this.source -= vout.value;
+                    this.volume -= vout.value;
                     this.packet.particles.push( {
-                        position : position,
-                        velocity : velocity,
-                        size : Algebra.cubeSize( vout.value )
+                        index : this.counter ++,
+                        size : Algebra.cubeSize( vout.value ),
+                        position : Algebra.fromSpherical( coordinates )
                     } );
                 }
             }
@@ -133,14 +141,14 @@ Session.prototype.onTransaction = function( last, transaction ) {
     }
 
     if ( last ) {
-        var duration = Math.min( last - this.packet.time, 1000 );
-        console.log( "Session:onTransaction:", last, this.packet.time, parseInt( duration ) );
-        if ( duration > 0 )  {
-            this.packet.time = last;
-            setTimeout( this.commit.bind( this ), duration );
-        } else {
-            this.commit();
-        }
+//        var duration = Math.min( last - this.packet.time, 1000 );
+//        console.log( "Session:onTransaction:", last, this.packet.time, parseInt( duration ) );
+//        if ( duration > 0 )  {
+//            this.packet.time = last;
+//            setTimeout( this.commit.bind( this ), duration );
+//        } else {
+        this.commit();
+//        }
     }
 };
 

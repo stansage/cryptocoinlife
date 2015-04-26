@@ -1,5 +1,5 @@
 function Model( host ) {
-    this.source = { radius: 0, quality: 0, color : 0 };
+    this.source = null;
     this.particles = [];
     this.socket = new WebSocket( host );
 }
@@ -8,17 +8,15 @@ Model.prototype.onMessage = function( message ) {
     if ( ! message.data ) {
         console.warn( "Model:onMessage: No data" );
     } else {
-        console.log( "Model:onMessage:", message.data );
+//        console.log( "Model:onMessage:", message.data );
 
         var packet = JSON.parse( message.data );
+        this.source = packet.source;
         for ( var i = 0; i < packet.particles.length; ++ i ) {
-//            console.log( "Model:onMessage:", packet.particles[ i ] );
+            console.log( "Model:onMessage:", packet.particles[ i ].position );
             this.particles.push( packet.particles[ i ] );
         }
 
-        this.source.radius = packet.radius;
-        this.source.quality = packet.radius / 2;
-        this.source.color = 0xff0000 + ( parseInt( packet.scale * 0xff ) << 8 );
     }
 };
 // var api = function() {

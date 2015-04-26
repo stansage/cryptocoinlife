@@ -22,7 +22,7 @@ server.start();
     } else {
         var wsc = new WebSocket( "ws://localhost:5100/api" );
         wsc.on( "open", function() {
-            wsc.send( JSON.stringify( { block: 1 } ) );
+            wsc.send( JSON.stringify( { block: 0 } ) );
         });
         wsc.on( "message", function( message ) {
             var packet = JSON.parse( message );

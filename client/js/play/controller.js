@@ -61,7 +61,7 @@ Controller.prototype.onMouseMove = function( event ) {
 
 Controller.prototype.onTouchStart = function( event ) {
     if ( event.touches.length > 1 ) {
-        event.preventDefault();
+        event.defaultPrevented();
 
         this.mouseX = event.touches[ 0 ].pageX - this.halfX;
         this.mouseY = event.touches[ 0 ].pageY - this.halfY;
@@ -69,12 +69,11 @@ Controller.prototype.onTouchStart = function( event ) {
 };
 
 Controller.prototype.onTouchMove = function( event ) {
-    if ( event.touches.length == 1 ) {
-        event.preventDefault();
+    if ( event.touches.length === 1 ) {
+        event.defaultPrevented();
 
         this.mouseX = event.touches[ 0 ].pageX - this.halfX;
         this.mouseY = event.touches[ 0 ].pageY - this.halfY;
-
 //        this.view.scene.position.x += this.mouseX / 100;
 //        this.view.scene.position.y += this.mouseY / 100;
     }

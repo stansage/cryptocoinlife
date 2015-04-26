@@ -11,7 +11,7 @@ require( [
         var controller = new Controller( model, view );
 
         controller.attach( document.body );
-        view.animate( model );
+        view.render( model );
     }
 );
 

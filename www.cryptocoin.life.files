@@ -12,9 +12,13 @@ client/html.jade
 client/main.jade
 client/play.jade
 client/support.jade
+client/shaders/fragment.glsl
+client/shaders/vertex.glsl
 client/js/play/controller.js
 client/js/play/model.js
 client/js/play/view.js
+client/js/play/view/source.js
+
 client/js/main.js
 client/js/support.js
 client/js/html.js
@@ -918,5 +922,4 @@ node_modules/crc/lib/crc16_modbus.js
 node_modules/crc/lib/crc16.js
 node_modules/crc/lib/crc24.js
 node_modules/crc/lib/crc32.js
-client/shaders/fragment.glsl
-client/shaders/vertex.glsl
+client/js/play/view/matter.js
