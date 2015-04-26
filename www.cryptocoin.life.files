@@ -923,3 +923,4 @@ node_modules/crc/lib/crc16.js
 node_modules/crc/lib/crc24.js
 node_modules/crc/lib/crc32.js
 client/js/play/view/matter.js
+blockchain/lib/block.js

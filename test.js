@@ -12,68 +12,61 @@ server.start();
 (function test() {
     var state = 0;
 //    var time = Date.now();
-    var assert = function( condition, message ) {
-        if ( ! condition )
-            throw new Error( "test:" + state + ": " + message );
+    var assert = function( condition, arg ) {
+        if ( ! condition ) {
+            if ( typeof( key ) !== "string" ) {
+                arg = JSON.stringify( arg );
+            }
+
+            throw new Error( "test " + state + ": " + arg );
+        }
     }
 
     if ( ! server.isReady() ) {
         setTimeout( test, 1 );
     } else {
-        var wsc = new WebSocket( "ws://localhost:5100/api" );
-        wsc.on( "open", function() {
-            wsc.send( JSON.stringify( { block: 0 } ) );
-        });
+        var wsc = new WebSocket( "ws://localhost:5000/api" );
         wsc.on( "message", function( message ) {
             var packet = JSON.parse( message );
 
-            console.log( packet );
+//            console.log( packet );
 
-            assert( packet.radius && packet.scale && packet.radius > 1.0 && packet.scale < 1.0 );
+            assert( ( !! packet.source ) && ( !! packet.matter ), message );
 
-//            console.log("test:", time, message );
-
-            packet.radius = parseInt( packet.radius * Prescision );
-            packet.scale = parseInt( packet.scale * Prescision );
+            packet.source.radius *= Prescision;
+            packet.source.scale *= Prescision;
 
             switch ( ++ state ) {
             case 1:
-//                time = Date.now() - time;
-//                assert( time > 2000 && time < 2100, time );
-//                time = Date.now();
-                assert( packet.radius === 171149860 && packet.scale === 999997, message );
-                assert( packet.particles.length === 1 );
-                assert( parseInt( packet.particles[ 0 ].x * Prescision ) === 78294696 );
-                assert( parseInt( packet.particles[ 0 ].y * Prescision ) === 121835952 );
-                assert( parseInt( packet.particles[ 0 ].z * Prescision ) === 93067515 );
-                assert( parseInt( packet.particles[ 0 ].size * Prescision ) === 2285390 );
+                packet.matter[ 0 ].size *= Prescision;
+                packet.matter[ 0 ].scale *= Prescision;
 
-                wsc.send( JSON.stringify( { block: 2 } ) );
+                assert( parseInt( packet.source.radius ) === 171149860, packet.source.radius );
+                assert( parseInt( packet.source.scale ) === 999997, packet.source.scale );
+                assert( packet.matter.length === 1, packet.matter );
+                assert( packet.matter[ 0 ].index === 0, packet.matter[ 0 ].index );
+                assert( parseInt( packet.matter[ 0 ].size ) === 3684031, packet.matter[ 0 ].size );
+                assert( parseInt( packet.matter[ 0 ].scale ) === 2, packet.matter[ 0 ].scale );
                 break;
-            case 2:
-//                time = Date.now() - time;
-//                assert( time > 19000 && time < 20000, time );
-                assert( packet.radius === 171149725 && packet.scale === 999995, message );
-                assert( packet.particles.length === 1 );
-                assert( parseInt( packet.particles[ 0 ].x * Prescision ) === -78294700 );
-                assert( parseInt( packet.particles[ 0 ].y * Prescision ) === -121835942 );
-                assert( parseInt( packet.particles[ 0 ].z * Prescision ) === -93067524 );
-                assert( parseInt( packet.particles[ 0 ].size * Prescision ) === 2285390 );
+            case 171:
+                packet.matter[ 0 ].size *= Prescision;
+                packet.matter[ 0 ].scale *= Prescision;
+                packet.matter[ 1 ].size *= Prescision;
+                packet.matter[ 1 ].scale *= Prescision;
 
-                wsc.send( JSON.stringify( { block: 5 } ) );
-//                time = Date.now();
+                assert( parseInt( packet.source.radius ) === 171126630, packet.source.radius );
+                assert( parseInt( packet.source.scale ) === 999590, packet.source.scale );
+                assert( packet.matter.length === 2, packet.matter );
+                assert( packet.matter[ 0 ].index === 9, packet.matter[ 0 ].index );
+                assert( parseInt( packet.matter[ 0 ].size ) === 3684031, packet.matter[ 0 ].size );
+                assert( parseInt( packet.matter[ 0 ].scale ) === 2, packet.matter[ 0 ].scale );
+                assert( packet.matter[ 1 ].index === 170, packet.matter[ 1 ].index );
+                assert( parseInt( packet.matter[ 1 ].size ) === 4641588, packet.matter[ 1 ].size );
+                assert( parseInt( packet.matter[ 1 ].scale ) === 4, packet.matter[ 1 ].scale );
                 break;
-            case 3:
-//                time = Date.now() - time;
-//                assert( time > 9000 && time < 10000, time );
-                assert( packet.radius === 171149589 && packet.scale === 999992, message );
-                assert( packet.particles.length === 1 );
-                assert( parseInt( packet.particles[ 0 ].x * Prescision ) === -78294798 );
-                assert( parseInt( packet.particles[ 0 ].y * Prescision ) === -121835728 );
-                assert( parseInt( packet.particles[ 0 ].z * Prescision ) === -93067722 );
-                assert( parseInt( packet.particles[ 0 ].size * Prescision ) === 2285390 );
-                wsc.send( JSON.stringify( {} ) );
-//                time = Date.now();
+            case 1000:
+//                assert( packet.matter.length === 1, packet.matter );
+                wsc.close();
                 break;
             }
         });

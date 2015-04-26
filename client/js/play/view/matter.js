@@ -52,18 +52,19 @@ function Matter( count ) {
 }
 
 Matter.prototype.render = function( index, value, location ) {
-//        this.velocities[ current ] = particle.velocity;
-    if ( value ) {
-        var size = this.particles.geometry.attributes.size;
-        size.array[ index ] = value;
-        size.needsUpdate = true;
-    }
+    var size = this.particles.geometry.attributes.size;
+    size.needsUpdate = true;
 
-    if ( location ) {
+    if ( ( ! location ) ) {
+        size.array[ index ] -= value;
+    } else {
+        size.array[ index ] = value;
+
         var position = this.particles.geometry.attributes.position;
-        for ( var i = 0; i < position.length; ++ i ) {
+        position.needsUpdate = true;
+
+        for ( var i = 0; i < location.length; ++ i ) {
             position.array[ index ++ ] = location[ i ];
         }
-        position.needsUpdate = true;
     }
 }

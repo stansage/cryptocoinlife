@@ -12,9 +12,9 @@ Model.prototype.onMessage = function( message ) {
 
         var packet = JSON.parse( message.data );
         this.source = packet.source;
-        for ( var i = 0; i < packet.particles.length; ++ i ) {
-            console.log( "Model:onMessage:", packet.particles[ i ].position );
-            this.particles.push( packet.particles[ i ] );
+        for ( var i = 0; i < packet.matter.length; ++ i ) {
+//            console.log( "Model:onMessage:", packet.matter[ i ].position );
+            this.particles.push( packet.matter[ i ] );
         }
 
     }
