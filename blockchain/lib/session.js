@@ -11,6 +11,12 @@ function Session( client, rpc ) {
     this.rpc = rpc;
     this.client = client;
     this.block = new Block();
+    this.paused = false;
+}
+
+Session.prototype.initialize = function() {
+    this.client.onmessage = this.onRequest.bind( this );
+    this.nextBlock();
 }
 
 Session.prototype.nextBlock = function() {
@@ -22,6 +28,20 @@ Session.prototype.nextBlock = function() {
         this.rpc.getBlock( this.block.id, this.onBlock.bind( this ) );
     }
 }
+
+Session.prototype.onRequest = function( message ) {
+    var request = JSON.parse( message.data );
+    switch ( request.action ) {
+    case "pause":
+        this.paused = ! this.paused;
+        if ( ( ! this.paused ) && ( this.block.size === 0 ) )  {
+            this.nextBlock();
+        }
+        break;
+    default:
+        console.warn( "Session::onRequset", request );
+    }
+};
 
 Session.prototype.onBlock = function( block ) {
     if ( !! block ) {
@@ -43,7 +63,9 @@ Session.prototype.onTransaction = function( transaction ) {
             var packet = this.block.commit();
 //            console.log( "Session:onTransaction:", packet );
             this.client.send( JSON.stringify( packet ) );
-            this.nextBlock();
+            if ( ! this.paused ) {
+                this.nextBlock();
+            }
         } catch ( exception ) {
            console.log( "Session closed", exception );
         }

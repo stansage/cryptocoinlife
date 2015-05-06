@@ -4,6 +4,20 @@ function Model( host ) {
     this.socket = new WebSocket( host );
 }
 
+Model.prototype.load = function() {
+    this.socket.onmessage = this.onMessage.bind( this );
+}
+
+Model.prototype.unload = function() {
+    this.socket.close();
+}
+
+Model.prototype.pause = function() {
+    this.socket.send( JSON.stringify( {
+        action : "pause"
+    } ) );
+}
+
 Model.prototype.onMessage = function( message ) {
     if ( ! message.data ) {
         console.warn( "Model:onMessage: No data" );
@@ -19,6 +33,7 @@ Model.prototype.onMessage = function( message ) {
 
     }
 };
+
 // var api = function() {
 
 //     var ws: new WebSocket('ws://46.241.23.52:4225'),

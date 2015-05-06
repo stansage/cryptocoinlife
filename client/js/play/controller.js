@@ -8,14 +8,14 @@ function Controller( model, view ) {
 }
 
 Controller.prototype.attach = function( dom ) {
-    this.model.socket.onmessage = this.model.onMessage.bind( this.model );
+    this.model.load();
     this.view.getDomElements().forEach( dom.appendChild, dom );
 
     document.addEventListener( "mousemove", this.onMouseMove.bind( this ), false );
     document.addEventListener( "touchstart", this.onTouchStart.bind( this ), false );
     document.addEventListener( "touchmove", this.onTouchMove.bind( this ), false );
 
-//    window.addEventListener( "click", view.triggerAnimation.bind( view ) );
+    window.addEventListener( "click", this.model.pause.bind( this.model ) );
     window.addEventListener( "resize", this.onResize.bind( this ), false );
     window.addEventListener( "beforeunload", this.onUnload.bind( this ), false );
 
@@ -33,7 +33,7 @@ Controller.prototype.attach = function( dom ) {
 };
 
 Controller.prototype.onUnload = function() {
-    this.model.socket.close();
+    this.model.unload();
 }
 
 Controller.prototype.onResize = function() {
@@ -49,7 +49,7 @@ Controller.prototype.onMouseWheel = function( event ) {
     // check for detail first so Opera uses that instead of wheelDelta
     var delta = event.detail ? event.detail * ( -120 ) : event.wheelDelta;
     // delta returns +120 when wheel is scrolled up, -120 when down
-    console.log( "Contreoller:onMouseWheel:", delta );
+//    console.log( "Contreoller:onMouseWheel:", delta );
     this.view.look( delta );
 };
 

@@ -15,7 +15,7 @@ function Api( bitcoin ) {
 Api.prototype.subscribe = function( socket ) {
     var session = new Session( socket, this.rpc );
     this.sessions.push( session );
-    session.nextBlock();
+    session.initialize();
 };
 
 Api.prototype.unsubscribe = function( socket ) {
@@ -34,7 +34,6 @@ Api.prototype.find = function( socket ) {
     }
     return -1;
 };
-
 
 module.exports = {
     createApi: function( provider ) {

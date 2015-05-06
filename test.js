@@ -25,7 +25,7 @@ server.start();
     if ( ! server.isReady() ) {
         setTimeout( test, 1 );
     } else {
-        var wsc = new WebSocket( "ws://localhost:5000/api" );
+        var wsc = new WebSocket( "ws://localhost:5100/api" );
         wsc.on( "message", function( message ) {
             var packet = JSON.parse( message );
 
