@@ -74,7 +74,7 @@ View.prototype.render = function( model ) {
             this.matters.push( new Matter( MatterGranularity ) );
             this.scene.add( this.matters[ this.matters.length - 1 ].particles );
         }
-        this.matters[ granularity ].render( index, particle.size, particle.position );
+        this.matters[ granularity ].update( index, particle.size, particle.position );
     }
 
     this.renderer.render( this.scene, this.camera );

@@ -51,12 +51,12 @@ function Matter( count ) {
     this.particles = new THREE.PointCloud( geometry, shader );
 }
 
-Matter.prototype.render = function( index, value, location ) {
+Matter.prototype.update = function( index, value, location ) {
     var size = this.particles.geometry.attributes.size;
     size.needsUpdate = true;
 
     if ( ( ! location ) ) {
-        size.array[ index ] -= value;
+        size.array[ index ] = Math.pow( Math.pow( size.array[ index ], 3 ) - Math.pow( value, 3 ), 1 / 3 );
     } else {
         size.array[ index ] = value;
 

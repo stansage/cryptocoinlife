@@ -35,7 +35,7 @@ var MaxSource = 2 * Algebra.sphereRadius( MaxVolume );
 
 function Block( id ) {
     this.chain = {};
-    this.history = [];
+    this.content = [];
     this.id = id;
     this.index = 0;
     this.reward = 0;
@@ -69,7 +69,7 @@ Block.prototype.add = function( transaction ) {
     for ( var i = 0; i < transaction.vin.length; ++ i ) {
         var vin = transaction.vin[ i ];
         if ( ! vin.coinbase ) {
-            this.history.push( vin );
+            this.content.push( vin );
         } else if ( transaction.vin.length !== 1 ) {
             console.error( "Invalid coinbase", transaction );
         }
@@ -113,8 +113,8 @@ Block.prototype.commit = function() {
 
 //    console.log( "commit", this.time, half, coordinates );
 
-    for ( var i = 0; i < this.history.length; ++ i ) {
-        var transaction = this.history[ i ];
+    for ( var i = 0; i < this.content.length; ++ i ) {
+        var transaction = this.content[ i ];
         if ( transaction.txid in this.chain ) {
             var item = this.chain[ transaction.txid ]
             var value = item.outgoing[ transaction.vout ];
@@ -124,7 +124,7 @@ Block.prototype.commit = function() {
                 scale : value / MaxVolume
             } );
         } else {
-            console.error( "Invalid history", transaction );
+            console.error( "Invalid content", transaction );
         }
     }
 
@@ -135,7 +135,7 @@ Block.prototype.commit = function() {
         position : Algebra.fromSpherical( coordinates )
     } );
 
-    this.history = [];
+    this.content = [];
     this.volume = 0;
 
     return result;
