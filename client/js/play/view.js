@@ -55,7 +55,7 @@ View.prototype.render = function( model ) {
     this.stats.begin();
 
     if ( !! model.source ) {
-        var quality = model.source.radius / 2;
+        var quality = Math.max( model.source.radius / 2, 1 );
         var color = 0xff0000 + ( parseInt( model.source.scale * 0xff ) << 8 );
 
         this.source.render( model.source.radius, quality, color );

@@ -7,22 +7,20 @@
 var Algebra = require( "./algebra" );
 var Block = require( "./block" );
 
-function Session( client, rpc ) {
+function Session( client, rpc, chain ) {
     this.rpc = rpc;
     this.client = client;
-    this.block = new Block();
+    this.block = new Block( 0, chain );
     this.paused = false;
 }
 
-Session.prototype.initialize = function() {
+Session.prototype.start = function() {
     this.client.onmessage = this.onRequest.bind( this );
     this.nextBlock();
 }
 
 Session.prototype.nextBlock = function() {
-    if ( ! this.block.id ) {
-        this.volume = this.block.total;
-        this.block.begin();
+    if ( this.block.first() ) {
         this.onTransaction();
     } else {
         this.rpc.getBlock( this.block.id, this.onBlock.bind( this ) );

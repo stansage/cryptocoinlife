@@ -33,8 +33,8 @@ var SecondsPerDay = 24 * 60 * 60;
 var MaxVolume = 21000000.0;
 var MaxSource = 2 * Algebra.sphereRadius( MaxVolume );
 
-function Block( id ) {
-    this.chain = {};
+function Block( id, chain ) {
+    this.chain = chain;
     this.content = [];
     this.id = id;
     this.index = 0;
@@ -46,13 +46,19 @@ function Block( id ) {
 }
 
 
-Block.prototype.begin = function() {
+Block.prototype.first = function() {
+    if ( !! this.id ) {
+        return false;
+    }
+
     this.id = 1;
     this.index = 0;
     this.time = GenesisTransaction.blocktime;
     this.size = 1;
     this.total = MaxVolume;
     this.add( GenesisTransaction );
+
+    return true;
 };
 
 Block.prototype.add = function( transaction ) {
@@ -99,6 +105,7 @@ Block.prototype.commit = function() {
     var result = {
         matter : [],
         source : {
+//            total : MaxVolume,
             radius : Algebra.sphereRadius( this.total ),
             scale : this.total / MaxVolume
         }
@@ -120,8 +127,7 @@ Block.prototype.commit = function() {
             var value = item.outgoing[ transaction.vout ];
             result.matter.push( {
                 index : item.block,
-                size : Algebra.cubeSize( value ),
-                scale : value / MaxVolume
+                size : Algebra.cubeSize( value )
             } );
         } else {
             console.error( "Invalid content", transaction );
@@ -129,12 +135,12 @@ Block.prototype.commit = function() {
     }
 
     result.matter.push( {
-        index : this.index ++,
+        index : this.index,
         size : Algebra.cubeSize( this.volume ),
-        scale : this.volume / MaxVolume,
         position : Algebra.fromSpherical( coordinates )
     } );
 
+    ++ this.index;
     this.content = [];
     this.volume = 0;
 

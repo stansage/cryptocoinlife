@@ -55,10 +55,14 @@ Matter.prototype.update = function( index, value, location ) {
     var size = this.particles.geometry.attributes.size;
     size.needsUpdate = true;
 
-    if ( ( ! location ) ) {
-        size.array[ index ] = Math.pow( Math.pow( size.array[ index ], 3 ) - Math.pow( value, 3 ), 1 / 3 );
+    var v = size.array[ index ];
+    size.array[ index ] = value;
+
+    if ( ! location ) {
+//        size.array[ index ] = Math.pow( Math.pow( size.array[ index ], 3 ) - Math.pow( value, 3 ), 1 / 3 );
+        console.log( "previous", index, size.array.length, size.array[ index ], value, v );
     } else {
-        size.array[ index ] = value;
+        console.log( "current", index, value, v );
 
         var position = this.particles.geometry.attributes.position;
         position.needsUpdate = true;

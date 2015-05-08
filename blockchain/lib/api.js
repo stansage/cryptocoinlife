@@ -10,12 +10,13 @@ var Session = require( "./session" );
 function Api( bitcoin ) {
     this.sessions = [];
     this.rpc = new Rpc( bitcoin );
+    this.chain = {};
 }
 
 Api.prototype.subscribe = function( socket ) {
-    var session = new Session( socket, this.rpc );
+    var session = new Session( socket, this.rpc, this.chain );
     this.sessions.push( session );
-    session.initialize();
+    session.start();
 };
 
 Api.prototype.unsubscribe = function( socket ) {
