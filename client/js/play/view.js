@@ -26,7 +26,10 @@ function View( width, height ) {
 
     this.source = new Source( 0, 0, 0 );
     this.scene.add( this.source.mesh  );
+
     this.matters = [];
+    this.dashes = [];
+    this.last = 0;
 };
 
 View.prototype.getDomElements = function() {
@@ -56,9 +59,9 @@ View.prototype.render = function( model ) {
 
     if ( !! model.source ) {
         var quality = Math.max( model.source.radius / 2, 1 );
-        var color = 0xff0000 + ( parseInt( model.source.scale * 0xff ) << 8 );
+        var color = model.toColor( model.source.scale );
 
-        this.source.render( model.source.radius, quality, color );
+        this.source.update( model.source.radius, quality, color );
     }
 
     while ( model.particles.length !== 0 ) {
@@ -71,11 +74,53 @@ View.prototype.render = function( model ) {
         var granularity = parseInt( particle.index / MatterGranularity );
 
         while ( granularity >= this.matters.length ) {
-            this.matters.push( new Matter( MatterGranularity ) );
-            this.scene.add( this.matters[ this.matters.length - 1 ].particles );
+            var matter = new Matter( MatterGranularity );
+            this.matters.push( matter );
+            this.scene.add( matter.particles );
         }
         this.matters[ granularity ].update( index, particle.size, particle.position );
     }
+
+    if ( model.lines.length !== 0 ) {
+        for ( var i = 0, j = model.lines.length - this.dashes.length; i < j; ++ i ) {
+            this.dashes.push( new Dash( 1, 1 ) );
+            this.scene.add( this.dashes[ this.dashes.length - 1 ].line );
+        }
+        for ( i = model.lines.length; i < this.last; ++ i ) {
+            this.dashes[ i ].update( [ 0, 0, 0 ], [ 0, 0, 0 ], 0 );
+        }
+        this.last = model.lines.length;
+    }
+
+    while ( model.lines.length !== 0 ) {
+        var line = model.lines.pop();
+
+        var left = [ 0, 0, 0 ];
+        if ( line.first !== line.last ) {
+            index = line.first % MatterGranularity;
+            granularity = parseInt( line.first / MatterGranularity );
+
+            left = this.matters[ granularity ].getPosition( index );
+        }
+
+        index = line.last % MatterGranularity;
+        granularity = parseInt( line.last / MatterGranularity );
+
+        var right = this.matters[ granularity ].getPosition( index );
+        var dash = this.dashes[ model.lines.length ];
+
+        dash.update( left, right, line.color );
+    }
+
+
+//    } else {
+//          console.log( "View.render dashes 0", this.dashes[ 0 ] );
+////        for ( i = 0; i < this.dashes.length; ++ i ) {
+////            console.log( "View.render dashes", this.dashes[ i ] );
+////        }
+//    }
+
+//        this.scene.add( this.matters[ this.matters.length - 1 ].particles );
 
     this.renderer.render( this.scene, this.camera );
     this.stats.end();

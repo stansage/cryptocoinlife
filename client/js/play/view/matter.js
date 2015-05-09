@@ -49,7 +49,18 @@ function Matter( count ) {
     geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
 
     this.particles = new THREE.PointCloud( geometry, shader );
-}
+};
+
+Matter.prototype.getPosition = function( index ) {
+    var result = [ 0, 0, 0 ];
+    var position = this.particles.geometry.attributes.position;
+
+    for ( var i = 0; i < result.length; ++ i ) {
+        result[ i ] = position.array[ index ++ ];
+    }
+
+    return result;
+};
 
 Matter.prototype.update = function( index, value, location ) {
     var size = this.particles.geometry.attributes.size;
@@ -59,8 +70,6 @@ Matter.prototype.update = function( index, value, location ) {
     size.array[ index ] = value;
 
     if ( ( !! location ) && !! ( location.length ) ) {
-        console.log( "current", index, value, v );
-
         var position = this.particles.geometry.attributes.position;
         position.needsUpdate = true;
 
@@ -68,4 +77,5 @@ Matter.prototype.update = function( index, value, location ) {
             position.array[ index ++ ] = location[ i ];
         }
     }
-}
+};
+

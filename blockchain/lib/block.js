@@ -47,6 +47,7 @@ function Block( id, chain ) {
     this.size = 0;
     this.spent = [];
     this.volume = 0;
+    this.reward = 0;
 }
 
 
@@ -91,9 +92,10 @@ Block.prototype.add = function( transaction ) {
         var value = transaction.vout[ j ].value;
         outgoing.push( value );
         this.volume += value;
-        if ( this.content.length === 0 ) {
-            this.total -= value;
-        }
+    }
+
+    if ( this.content.length === 0 ) {
+        this.reward = this.volume;
     }
 
     if ( transaction.txid in this.chain ) {
@@ -159,7 +161,8 @@ Block.prototype.commit = function() {
 
             result.matter.push( {
                 index : item.block,
-                size : Algebra.cubeSize( this.children[ item.block ] )
+                size : Algebra.cubeSize( this.children[ item.block ] ),
+                scale : value / this.volume
             } );
         } else {
             console.error( transaction );
@@ -171,6 +174,7 @@ Block.prototype.commit = function() {
         result.matter.push( {
             index : this.index,
             size : Algebra.cubeSize( this.volume ),
+            scale : this.reward / this.volume,
             position : Algebra.fromSpherical( coordinates )
         } );
     }
