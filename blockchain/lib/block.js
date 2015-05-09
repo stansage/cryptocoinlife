@@ -34,15 +34,19 @@ var MaxVolume = 21000000.0;
 var MaxSource = 2 * Algebra.sphereRadius( MaxVolume );
 
 function Block( id, chain ) {
+    /// Global
     this.chain = chain;
+    this.children = [];
+    this.index = 0;
+    this.total = 0;
+
+    /// Commit
     this.content = [];
     this.id = id;
-    this.index = 0;
-    this.reward = 0;
     this.time = 0;
     this.size = 0;
+    this.spent = [];
     this.volume = 0;
-    this.total = 0;
 }
 
 
@@ -56,6 +60,7 @@ Block.prototype.first = function() {
     this.time = GenesisTransaction.blocktime;
     this.size = 1;
     this.total = MaxVolume;
+
     this.add( GenesisTransaction );
 
     return true;
@@ -84,30 +89,46 @@ Block.prototype.add = function( transaction ) {
     var outgoing = [];
     for ( var j = 0; j < transaction.vout.length; ++ j ) {
         var value = transaction.vout[ j ].value;
-        outgoing.push( transaction.vout[ j ].value );
-        if ( ! item ) {
+        outgoing.push( value );
+        this.volume += value;
+        if ( this.content.length === 0 ) {
             this.total -= value;
         }
-        this.volume += value;
     }
 
     if ( transaction.txid in this.chain ) {
         item = this.chain[ transaction.txid ];
+        if ( item.block !== this.index ) {
+            console.error( item.block, this.index );
+            throw "Invalid block";
+        }
+        if ( item.outgoing.length !== outgoing.length ) {
+            console.error( item.block, this.index );
+            throw "Invalid outgoing";
+        }
+        for ( var i = 0; i < outgoing.length; ++ i ) {
+            if ( item.outgoing[ i ] !== outgoing[ i ] ) {
+                console.error( item.block, this.index );
+                throw "Invalid value";
+            }
+        }
     } else {
-        item = {};
+        item = {
+            block : this.index,
+            outgoing : outgoing
+        };
         this.chain[ transaction.txid ] = item;
     }
-    item.block = this.index;
-    item.outgoing = outgoing;
 }
 
 Block.prototype.commit = function() {
+    this.children.push( this.volume );
+
     var result = {
         matter : [],
         source : {
-//            total : MaxVolume,
-            radius : Algebra.sphereRadius( this.total ),
-            scale : this.total / MaxVolume
+            radius : 0,
+            scale : 0
         }
     };
 
@@ -118,31 +139,53 @@ Block.prototype.commit = function() {
     var angle = 2.0 * Math.PI * ( this.time % half ) / half;
     var coordinates = [ radius ].concat( [ angle, angle ] );
 
-//    console.log( "commit", this.time, half, coordinates );
-
     for ( var i = 0; i < this.content.length; ++ i ) {
         var transaction = this.content[ i ];
         if ( transaction.txid in this.chain ) {
             var item = this.chain[ transaction.txid ]
             var value = item.outgoing[ transaction.vout ];
+
+            if ( item.block >= this.children.length ) {
+                console.error( item.block, this.children.length, i );
+                throw "Invalid item";
+            }
+
+            this.children[ item.block ] -= value;
+
+            if ( this.children[ item.block ] < 0 ) {
+                console.error( item.block, this.children[ item.block ], value );
+                throw "Invalid value";
+            }
+
             result.matter.push( {
                 index : item.block,
-                size : Algebra.cubeSize( value )
+                size : Algebra.cubeSize( this.children[ item.block ] )
             } );
         } else {
-            console.error( "Invalid content", transaction );
+            console.error( transaction );
+            throw "Invalid transaction";
         }
     }
 
-    result.matter.push( {
-        index : this.index,
-        size : Algebra.cubeSize( this.volume ),
-        position : Algebra.fromSpherical( coordinates )
-    } );
+    if ( this.volume > 0 ) {
+        result.matter.push( {
+            index : this.index,
+            size : Algebra.cubeSize( this.volume ),
+            position : Algebra.fromSpherical( coordinates )
+        } );
+    }
 
     ++ this.index;
     this.content = [];
     this.volume = 0;
+
+    if ( this.children.length !== this.index ) {
+        console.error( this.children.length, this.index );
+        throw "Invalid children";
+    }
+
+    result.source.radius = Algebra.sphereRadius( this.total );
+    result.source.scale = this.total / MaxVolume;
 
     return result;
 };

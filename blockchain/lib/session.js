@@ -4,7 +4,7 @@
  *  https://github.com/stansage/cryptocoinlife
  */
 
-var Algebra = require( "./algebra" );
+//var Algebra = require( "./algebra" );
 var Block = require( "./block" );
 
 function Session( client, rpc, chain ) {
@@ -47,6 +47,7 @@ Session.prototype.onBlock = function( block ) {
         this.block.time = block.time;
         this.block.size = block.tx.length;
         for ( var i = 0; i < this.block.size; ++ i ) {
+            var txid = block.tx[ i ];
             this.rpc.getTransaction( block.tx[ i ], this.onTransaction.bind( this ) );
         }
     }
