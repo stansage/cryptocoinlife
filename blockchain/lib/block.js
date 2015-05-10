@@ -175,7 +175,7 @@ Block.prototype.commit = function() {
 
             result.matter.push( {
                 index : item.block,
-                size : Algebra.cubeSize( this.children[ item.block ] ),
+                size : this.children[ item.block ],
                 scale : value / this.volume
             } );
         } else {
@@ -186,7 +186,7 @@ Block.prototype.commit = function() {
 
     result.matter.push( {
         index : this.index,
-        size : Algebra.cubeSize( this.volume ),
+        size : this.volume,
         scale : this.reward / this.volume,
         position : Algebra.fromSpherical( coordinates )
     } );

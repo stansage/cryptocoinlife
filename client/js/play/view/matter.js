@@ -1,18 +1,25 @@
 var Particle = {
-    color : 0xffff00,
-    bmp : [ 0x77cccccc, 0x77cccccc, 0x77cccccc, 0x77cccccc ],
-    width : 2,
-    height : 2
+    color : 0xffff00
+//    bmp : [ 0x77cccccc, 0x77cccccc, 0x77cccccc, 0x77cccccc ],
+//    width : 2,
+//    height : 2
 };
 
 //var ParticleCount = 3000;
 //var ParticleVelocity = 0.1
 
 function Matter( count ) {
+    var texture = THREE.ImageUtils.loadTexture( "particle.png" );
+
+//     = THREE.ImageUtils.generateDataTexture( 1, 1, new THREE.Color( Particle.color ) )
     var attributes = {
         size : {
             type : 'f',
-            value : null
+            value : null,
+        },
+        brush: {
+            type: 'c',
+            value: null
         }
 //        color: { type: 'c', value: null }
     };
@@ -20,12 +27,12 @@ function Matter( count ) {
 //        viewport: { type: "v4", value: new THREE.Vector4( 0, 0, this.width, this.height )  }
         color : {
             type : "c",
-            value : new THREE.Color( Particle.color )
+            value : new THREE.Color( 0xffff00 )
+        },
+        texture : {
+            type : "t",
+            value : texture
         }
-//        texture : {
-//            type : "t",
-//            value : new THREE.DataTexture( Coin.bmp, Coin.width, Coin.height )
-//        }
     };
     var shader = new THREE.ShaderMaterial( {
         uniforms : uniforms,
@@ -39,14 +46,18 @@ function Matter( count ) {
     } );
 
     var positions = new Float32Array( count * 3 );
+    var colors = new Float32Array( count * 3 );
     var sizes = new Float32Array( count );
-    var geometry = new THREE.BufferGeometry();
+
     for ( var i = 0; i < positions.length; ++ i ) {
         positions[ i ] = 1.0;
     }
 
+    var geometry = new THREE.BufferGeometry();
+
     geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
     geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+    geometry.addAttribute( 'brush', new THREE.BufferAttribute( colors, 3 ) );
 
     this.particles = new THREE.PointCloud( geometry, shader );
 };
@@ -62,12 +73,18 @@ Matter.prototype.getPosition = function( index ) {
     return result;
 };
 
-Matter.prototype.update = function( index, value, location ) {
+Matter.prototype.update = function( index, value, location, color ) {
+    color = new THREE.Color( color );
+
     var size = this.particles.geometry.attributes.size;
     size.needsUpdate = true;
-
-    var v = size.array[ index ];
     size.array[ index ] = value;
+
+    var brush = this.particles.geometry.attributes.brush;
+    brush.needsUpdate = true;
+    brush.array[ index + 0 ] = color.r;
+    brush.array[ index + 1 ] = color.g
+    brush.array[ index + 2 ] = color.b;
 
     if ( ( !! location ) && !! ( location.length ) ) {
         var position = this.particles.geometry.attributes.position;

@@ -83,7 +83,7 @@ View.prototype.render = function( model ) {
             this.matters.push( matter );
             this.scene.add( matter.particles );
         }
-        this.matters[ granularity ].update( index, particle.size, particle.position );
+        this.matters[ granularity ].update( index, particle.size, particle.position, model.toColor( particle.scale ) );
     }
 
     if ( model.lines.length !== 0 ) {
