@@ -124,13 +124,27 @@ Block.prototype.add = function( transaction ) {
 }
 
 Block.prototype.commit = function() {
+    if ( this.reward < 1 ) {
+        console.warn( "Block.commit Low reward", this.reward );
+    }
+    if ( this.volume < 1 ) {
+        console.warn( "Block.commit Low volume", this.volume );
+    }
+
+    if ( this.volume < Math.abs( Number.MIN_VALUE ) ) {
+        console.error( this.volume );
+        throw "Zero volume";
+    }
+
     this.children.push( this.volume );
+    this.total -= this.reward;
 
     var result = {
+        block : this.index,
         matter : [],
         source : {
-            radius : 0,
-            scale : 0
+            radius : Algebra.sphereRadius( this.total ),
+            scale : this.total / MaxVolume
         }
     };
 
@@ -170,14 +184,12 @@ Block.prototype.commit = function() {
         }
     }
 
-    if ( this.volume > 0 ) {
-        result.matter.push( {
-            index : this.index,
-            size : Algebra.cubeSize( this.volume ),
-            scale : this.reward / this.volume,
-            position : Algebra.fromSpherical( coordinates )
-        } );
-    }
+    result.matter.push( {
+        index : this.index,
+        size : Algebra.cubeSize( this.volume ),
+        scale : this.reward / this.volume,
+        position : Algebra.fromSpherical( coordinates )
+    } );
 
     ++ this.index;
     this.content = [];
@@ -187,9 +199,6 @@ Block.prototype.commit = function() {
         console.error( this.children.length, this.index );
         throw "Invalid children";
     }
-
-    result.source.radius = Algebra.sphereRadius( this.total );
-    result.source.scale = this.total / MaxVolume;
 
     return result;
 };

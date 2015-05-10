@@ -36,6 +36,10 @@ View.prototype.getDomElements = function() {
     return [ this.renderer.domElement, this.stats.domElement ];
 };
 
+View.prototype.getMatterPosition = function( index ) {
+    return this.matters[ parseInt( index / MatterGranularity ) ].getPosition( index % MatterGranularity );
+};
+
 View.prototype.resize = function( width, height ) {
     this.width = width;
     this.height = height;
@@ -53,6 +57,7 @@ View.prototype.look = function( degrees ) {
         this.camera.position.z = z;
     }
 }
+
 
 View.prototype.render = function( model ) {
     this.stats.begin();
@@ -96,20 +101,13 @@ View.prototype.render = function( model ) {
         var line = model.lines.pop();
 
         var left = [ 0, 0, 0 ];
-        if ( line.first !== line.last ) {
-            index = line.first % MatterGranularity;
-            granularity = parseInt( line.first / MatterGranularity );
+        var right = this.getMatterPosition( line.right );;
 
-            left = this.matters[ granularity ].getPosition( index );
+        if ( line.left !== line.right ) {
+            left = this.getMatterPosition( line.left );
         }
 
-        index = line.last % MatterGranularity;
-        granularity = parseInt( line.last / MatterGranularity );
-
-        var right = this.matters[ granularity ].getPosition( index );
-        var dash = this.dashes[ model.lines.length ];
-
-        dash.update( left, right, line.color );
+        this.dashes[ model.lines.length ].update( left, right, line.color );
     }
 
 
