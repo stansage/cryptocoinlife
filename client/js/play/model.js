@@ -1,7 +1,6 @@
 function Model( host ) {
     this.source = null;
-    this.particles = [];
-    this.lines = [];
+    this.scene = [];
     this.socket = new WebSocket( host );
  }
 
@@ -13,7 +12,14 @@ Model.prototype.unload = function() {
     this.socket.close();
 }
 
+Model.prototype.accelerate = function() {
+    this.socket.send( JSON.stringify( {
+        action : "accelerate"
+    } ) );
+}
+
 Model.prototype.pause = function() {
+    console.log( "Model.pause" );
     this.socket.send( JSON.stringify( {
         action : "pause"
     } ) );
@@ -30,27 +36,42 @@ Model.prototype.onMessage = function( message ) {
         var packet = JSON.parse( message.data );
         this.source = packet.source;
 
-        for ( var i = 0, offset = this.lines.length; i < packet.matter.length; ++ i ) {
+        var content = {
+            lines : [],
+            particles : []
+        };
+
+        for ( var i = 0; i < packet.matter.length; ++ i ) {
             var particle = packet.matter[ i ];
 
             if ( i + 1 < packet.matter.length ) {
-                this.lines.push( {
+                content.lines.push( {
                     left : particle.index,
                     right : 0,
                     color : this.toColor( particle.scale ),
                 } );
             } else {
-                for ( var j = offset; j < this.lines.length; ++ j ) {
-                    this.lines[ j ].right = particle.index;
+                for ( var j = 0; j < content.lines.length; ++ j ) {
+                    content.lines[ j ].right = particle.index;
                 }
-                this.lines.push( {
+                content.lines.push( {
                     left : particle.index,
                     right : particle.index,
                     color : this.toColor( particle.scale )
                 } );
             }
 
-            this.particles.push( particle );
+            content.particles.push( particle );
         }
+
+        this.scene.push( content );
+
+        if ( this.scene.length === 1000 ) {
+            console.warn( "Too many items", this.scene.length );
+            this.pause();
+        }
+
+
+
     }
 };

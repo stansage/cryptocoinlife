@@ -50,7 +50,7 @@ function Matter( count ) {
     var sizes = new Float32Array( count );
 
     for ( var i = 0; i < positions.length; ++ i ) {
-        positions[ i ] = 1.0;
+        positions[ i ] = 2000.0;
     }
 
     var geometry = new THREE.BufferGeometry();
@@ -73,12 +73,12 @@ Matter.prototype.getPosition = function( index ) {
     return result;
 };
 
-Matter.prototype.update = function( index, value, location, color ) {
+Matter.prototype.update = function( index, size, location, color ) {
     color = new THREE.Color( color );
 
     var size = this.particles.geometry.attributes.size;
     size.needsUpdate = true;
-    size.array[ index ] = value;
+    size.array[ index ] = size;
 
     var brush = this.particles.geometry.attributes.brush;
     brush.needsUpdate = true;

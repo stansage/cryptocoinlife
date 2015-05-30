@@ -1,4 +1,5 @@
 var MatterGranularity = 3000;
+var Depth = 1000;
 
 function View( width, height ) {
     this.source = null;
@@ -7,7 +8,7 @@ function View( width, height ) {
     this.height = height;
     this.stats = new Stats();
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 80, width / height, 1, 1000 );
+    this.camera = new THREE.PerspectiveCamera( 80, width / height, 1, Depth );
     this.renderer = new THREE.WebGLRenderer();
     this.rgb = function( color ) {
         return ( color.r << 16 ) | ( color.g << 8 ) | color.b;
@@ -22,7 +23,7 @@ function View( width, height ) {
     this.stats.domElement.style.bottom = "0px";
     this.stats.domElement.style.right = "0px";
 
-    this.camera.position.z = 500;
+    this.camera.position.z = Depth / 2;
 
     this.source = new Source( 0, 0, 0 );
     this.scene.add( this.source.mesh  );
@@ -53,8 +54,19 @@ View.prototype.resize = function( width, height ) {
 
 View.prototype.look = function( degrees ) {
     var z = this.camera.position.z - degrees / 15;
-    if ( ( z > 200 ) && ( z < 1000 ) ) {
+    if ( ( z > 200 ) && ( z < Depth ) ) {
         this.camera.position.z = z;
+    }
+}
+
+View.prototype.dump = function() {
+//    console.log( "View.dump", this.matters.length );
+
+    for ( var i = 0; i < this.matters.length; ++ i ) {
+        var position = this.matters[ i ].particles.geometry.attributes.position;
+        for ( var j = 0; j < 30; j += 3 ) {
+            console.log( "View.look", i, j, position.array[ j + 0 ], position.array[ j + 1 ], position.array[ j + 2 ] );
+        }
     }
 }
 
@@ -69,45 +81,45 @@ View.prototype.render = function( model ) {
         this.source.update( model.source.radius, quality, color );
     }
 
-    while ( model.particles.length !== 0 ) {
-        if ( this.scene.children === 0 ) {
-            throw "source must be added";
+    if ( model.scene.length !== 0 ) {
+        var content = model.scene.pop();
+
+        while ( content.particles.length !== 0 ) {
+            var particle = content.particles.pop();
+            var index = particle.index % MatterGranularity;
+            var granularity = parseInt( particle.index / MatterGranularity );
+
+            while ( granularity >= this.matters.length ) {
+                var matter = new Matter( MatterGranularity );
+                this.matters.push( matter );
+                this.scene.add( matter.particles );
+            }
+            this.matters[ granularity ].update( index, particle.size, particle.position, model.toColor( particle.scale ) );
         }
 
-        var particle = model.particles.pop();
-        var index = particle.index % MatterGranularity;
-        var granularity = parseInt( particle.index / MatterGranularity );
-
-        while ( granularity >= this.matters.length ) {
-            var matter = new Matter( MatterGranularity );
-            this.matters.push( matter );
-            this.scene.add( matter.particles );
-        }
-        this.matters[ granularity ].update( index, particle.size, particle.position, model.toColor( particle.scale ) );
-    }
-
-    if ( model.lines.length !== 0 ) {
-        for ( var i = 0, j = model.lines.length - this.dashes.length; i < j; ++ i ) {
-            this.dashes.push( new Dash( 1, 1 ) );
-            this.scene.add( this.dashes[ this.dashes.length - 1 ].line );
-        }
-        for ( i = model.lines.length; i < this.last; ++ i ) {
-            this.dashes[ i ].update( [ 0, 0, 0 ], [ 0, 0, 0 ], 0 );
-        }
-        this.last = model.lines.length;
-    }
-
-    while ( model.lines.length !== 0 ) {
-        var line = model.lines.pop();
-
-        var left = [ 0, 0, 0 ];
-        var right = this.getMatterPosition( line.right );;
-
-        if ( line.left !== line.right ) {
-            left = this.getMatterPosition( line.left );
+        if ( content.lines.length !== 0 ) {
+            for ( var i = 0, j = content.lines.length - this.dashes.length; i < j; ++ i ) {
+                this.dashes.push( new Dash( 1, 1 ) );
+                this.scene.add( this.dashes[ this.dashes.length - 1 ].line );
+            }
+            for ( i = content.lines.length; i < this.last; ++ i ) {
+                this.dashes[ i ].update( [ 0, 0, 0 ], [ 0, 0, 0 ], 0 );
+            }
+            this.last = content.lines.length;
         }
 
-        this.dashes[ model.lines.length ].update( left, right, line.color );
+        while ( content.lines.length !== 0 ) {
+            var line = content.lines.pop();
+
+            var left = [ 0, 0, 0 ];
+            var right = this.getMatterPosition( line.right );;
+
+            if ( line.left !== line.right ) {
+                left = this.getMatterPosition( line.left );
+            }
+
+            this.dashes[ content.lines.length ].update( left, right, line.color );
+        }
     }
 
 

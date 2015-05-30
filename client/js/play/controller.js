@@ -7,28 +7,27 @@ function Controller( model, view ) {
     this.halfY = window.innerHeight / 2;
 }
 
-Controller.prototype.attach = function( dom ) {
-    this.model.load();
-    this.view.getDomElements().forEach( dom.appendChild, dom );
+Controller.prototype.attach = function( dom, name, callback ) {
+    if ( ! name ) {
+        this.model.load();
+        this.view.getDomElements().forEach( dom.appendChild, dom );
 
-    document.addEventListener( "mousemove", this.onMouseMove.bind( this ), false );
-    document.addEventListener( "touchstart", this.onTouchStart.bind( this ), false );
-    document.addEventListener( "touchmove", this.onTouchMove.bind( this ), false );
-
-    window.addEventListener( "click", this.model.pause.bind( this.model ) );
-    window.addEventListener( "resize", this.onResize.bind( this ), false );
-    window.addEventListener( "beforeunload", this.onUnload.bind( this ), false );
-
-    // FF doesn't recognize mousewheel as of FF3.x
-    var mousewheelevt = ( /Firefox/i.test( navigator.userAgent ) )? "DOMMouseScroll" : "mousewheel"
-    if ( document.attachEvent ) {
-        // if IE (and Opera depending on user setting)
-        document.attachEvent( "on" + mousewheelevt, this.onMouseWheel.bind( this ) );
-        //document.attachEvent( "onkeypress", this.onKeyPress.bind( this ) );
+        this.attach( window, "click", this.model.pause.bind( this.model ) );
+        this.attach( window, "resize", this.onResize.bind( this ), false );
+        this.attach( window, "beforeunload", this.onUnload.bind( this ), false );
+        this.attach( document, "wheel", this.onMouseWheel.bind( this ) );
+        this.attach( document, "keypress", this.onKeyPress.bind( this ) );
     } else {
-        // WC3 browsers
-        document.addEventListener( mousewheelevt, this.onMouseWheel.bind( this ), false );
-        //document.addEventListener( "keypress", this.onKeyPress.bind( this ), false );
+        if ( name = "wheel" ) {
+            name = ( /Firefox/i.test( navigator.userAgent ) )? "DOMMouseScroll" : "mousewheel"
+        }
+        if ( dom.addEventListener ) {
+            dom.addEventListener( name, callback, false );
+        } else if ( dom.attachEvent ) {
+            dom.attachEvent( "on" + name, callback );
+        } else {
+            dom[ "on" + name ] = callback;
+        }
     }
 };
 
@@ -41,6 +40,7 @@ Controller.prototype.onResize = function() {
     this.halfY = window.innerHeight / 2;
 
     this.view.resize( window.innerWidth, window.innerHeight );
+    this.view.dump();
 };
 
 Controller.prototype.onMouseWheel = function( event ) {

@@ -90,6 +90,7 @@ Block.prototype.add = function( transaction ) {
     var outgoing = [];
     for ( var j = 0; j < transaction.vout.length; ++ j ) {
         var value = transaction.vout[ j ].value;
+
         outgoing.push( value );
         this.volume += value;
     }
@@ -100,10 +101,6 @@ Block.prototype.add = function( transaction ) {
 
     if ( transaction.txid in this.chain ) {
         item = this.chain[ transaction.txid ];
-        if ( item.block !== this.index ) {
-            console.error( item.block, this.index );
-            throw "Invalid block";
-        }
         if ( item.outgoing.length !== outgoing.length ) {
             console.error( item.block, this.index );
             throw "Invalid outgoing";
@@ -111,7 +108,7 @@ Block.prototype.add = function( transaction ) {
         for ( var i = 0; i < outgoing.length; ++ i ) {
             if ( item.outgoing[ i ] !== outgoing[ i ] ) {
                 console.error( item.block, this.index );
-                throw "Invalid value";
+                throw "Invalid outgoing value";
             }
         }
     } else {
@@ -148,48 +145,7 @@ Block.prototype.commit = function() {
         }
     };
 
-    var distance = Math.max( 1, ( this.time - GenesisTransaction.time ) / SecondsPerDay );
-    var half = 2 * Math.PI * distance * distance;
-    var full = 2 * half;
-    var radius = this.time % full > half ? distance + MaxSource : -distance - MaxSource;
-    var angle = 2.0 * Math.PI * ( this.time % half ) / half;
-    var coordinates = [ radius ].concat( [ angle, angle ] );
-
-    for ( var i = 0; i < this.content.length; ++ i ) {
-        var transaction = this.content[ i ];
-        if ( transaction.txid in this.chain ) {
-            var item = this.chain[ transaction.txid ]
-            var value = item.outgoing[ transaction.vout ];
-
-            if ( item.block >= this.children.length ) {
-                console.error( item.block, this.children.length, i );
-                throw "Invalid item";
-            }
-
-            this.children[ item.block ] -= value;
-
-            if ( this.children[ item.block ] < 0 ) {
-                console.error( item.block, this.children[ item.block ], value );
-                throw "Invalid value";
-            }
-
-            result.matter.push( {
-                index : item.block,
-                size : this.children[ item.block ],
-                scale : value / this.volume
-            } );
-        } else {
-            console.error( transaction );
-            throw "Invalid transaction";
-        }
-    }
-
-    result.matter.push( {
-        index : this.index,
-        size : this.volume,
-        scale : this.reward / this.volume,
-        position : Algebra.fromSpherical( coordinates )
-    } );
+    this.fillMatter( result.matter );
 
     ++ this.index;
     this.content = [];
@@ -202,5 +158,63 @@ Block.prototype.commit = function() {
 
     return result;
 };
+
+Block.prototype.fillMatter = function( matter ) {
+    var distance = Math.max( 1, ( this.time - GenesisTransaction.time ) / SecondsPerDay );
+    var half = 2 * Math.PI * distance * distance;
+    var full = 2 * half;
+    var radius = MaxSource;
+//    var radius = this.time % full > half ? distance + MaxSource : -distance - MaxSource;
+//    var angle = Math.PI * ( this.time % half ) / half;
+    var azimutMin = Math.PI / 2;
+    var azimutMax = Math.PI + Math.PI / 2;
+
+
+    var angle1 = azimutMin + ( azimutMax - azimutMin ) * ( this.index % 360 ) / 360.0;
+    var angle2 = 0;//Math.PI + Math.PI / 2;// * Math.PI * ( this.index % 360 ) / 360.0;
+
+
+    var coordinates = [ radius ].concat( angle1, angle2 );
+
+
+    console.log( "Block.fillMatter", this.index, coordinates, Algebra.fromSpherical( coordinates ) );
+
+//    for ( var i = 0; i < this.content.length; ++ i ) {
+//        var transaction = this.content[ i ];
+//        if ( transaction.txid in this.chain ) {
+//            var item = this.chain[ transaction.txid ]
+//            var value = item.outgoing[ transaction.vout ];
+
+//            if ( item.block >= this.children.length ) {
+//                console.error( item.block, this.children.length, i );
+//                throw "Invalid item";
+//            }
+
+//            this.children[ item.block ] -= value;
+
+//            if ( this.children[ item.block ] < 0 ) {
+//                console.error( item.block, this.children[ item.block ], value );
+//                throw "Invalid value";
+//            }
+
+//            matter.push( {
+//                index : item.block,
+//                size : this.children[ item.block ],
+//                scale : value / this.volume
+//            } );
+//        } else {
+//            console.error( transaction );
+//            throw "Invalid transaction";
+//        }
+//    }
+
+    matter.push( {
+        index : this.index,
+        size : this.volume,
+        scale : this.reward / this.volume,
+        position : Algebra.fromSpherical( coordinates )
+//        position : coordinates
+    } );
+}
 
 module.exports = Block;

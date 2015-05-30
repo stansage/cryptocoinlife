@@ -6,12 +6,14 @@
 
 //var Algebra = require( "./algebra" );
 var Block = require( "./block" );
+var Delay = 100;
 
 function Session( client, rpc, chain ) {
     this.rpc = rpc;
     this.client = client;
     this.block = new Block( 0, chain );
     this.paused = false;
+    this.speed = 1;
 }
 
 Session.prototype.start = function() {
@@ -23,13 +25,23 @@ Session.prototype.nextBlock = function() {
     if ( this.block.first() ) {
         this.onTransaction();
     } else {
-        this.rpc.getBlock( this.block.id, this.onBlock.bind( this ) );
+        if ( this.speed > Delay ) {
+            this.rpc.getBlock( this.block.id, this.onBlock.bind( this ) );
+        } else {
+            var callback = this.rpc.getBlock.bind( this.rpc, this.block.id, this.onBlock.bind( this ) );
+            setTimeout( callback, Delay / this.speed );
+        }
     }
 }
 
 Session.prototype.onRequest = function( message ) {
     var request = JSON.parse( message.data );
     switch ( request.action ) {
+    case "accelerate":
+        if ( ++ this.speed < 0 ) {
+            this.speed = Delay + 1;
+        }
+        break;
     case "pause":
         this.paused = ! this.paused;
         if ( ( ! this.paused ) && ( this.block.size === 0 ) )  {
